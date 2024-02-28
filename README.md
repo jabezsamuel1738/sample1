@@ -1,2 +1,2 @@
 # sample
-# Update in sample
+# Changes in sample
