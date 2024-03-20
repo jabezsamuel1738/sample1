@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="15" failures="0" errors="0" time="0.667">
+  <testsuite name="addition()" errors="0" failures="0" skipped="0" timestamp="2024-03-01T12:14:52" time="0.273" tests="6">
+    <testcase classname="addition() Valid inputs Should return the sum of two positive numbers" name="addition() Valid inputs Should return the sum of two positive numbers" time="0.001">
+    </testcase>
+    <testcase classname="addition() Valid inputs Should return the sum when num1 is zero" name="addition() Valid inputs Should return the sum when num1 is zero" time="0">
+    </testcase>
+    <testcase classname="addition() Valid inputs Should return zero when both numbers are zero" name="addition() Valid inputs Should return zero when both numbers are zero" time="0.001">
+    </testcase>
+    <testcase classname="addition() Invalid inputs Should throw an error when num2 is negative" name="addition() Invalid inputs Should throw an error when num2 is negative" time="0.004">
+    </testcase>
+    <testcase classname="addition() Invalid inputs Should throw an error when num1 is negative" name="addition() Invalid inputs Should throw an error when num1 is negative" time="0.001">
+    </testcase>
+    <testcase classname="addition() Invalid inputs Should throw an error when both num1 and num2 are negative" name="addition() Invalid inputs Should throw an error when both num1 and num2 are negative" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="useAboutScreenVM" errors="0" failures="0" skipped="0" timestamp="2024-03-01T12:14:52" time="0.09" tests="6">
+    <testcase classname="useAboutScreenVM navigate to previous screen" name="useAboutScreenVM navigate to previous screen" time="0.001">
+    </testcase>
+    <testcase classname="useAboutScreenVM check the version" name="useAboutScreenVM check the version" time="0">
+    </testcase>
+    <testcase classname="useAboutScreenVM should call init on mount" name="useAboutScreenVM should call init on mount" time="0.005">
+    </testcase>
+    <testcase classname="useAboutScreenVM should set dbConnection state to true when getDBConnection returns a valid instance" name="useAboutScreenVM should set dbConnection state to true when getDBConnection returns a valid instance" time="0">
+    </testcase>
+    <testcase classname="useAboutScreenVM should set dbConnection state to true when getDBConnection returns a valid instance" name="useAboutScreenVM should set dbConnection state to true when getDBConnection returns a valid instance" time="0.001">
+    </testcase>
+    <testcase classname="useAboutScreenVM should call the navigateToSettings method" name="useAboutScreenVM should call the navigateToSettings method" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="getBalance function" errors="0" failures="0" skipped="0" timestamp="2024-03-01T12:14:52" time="0.076" tests="2">
+    <testcase classname="getBalance function fetches user balance successfully" name="getBalance function fetches user balance successfully" time="0.003">
+    </testcase>
+    <testcase classname="getBalance function handles errors properly" name="getBalance function handles errors properly" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2024-03-01T12:14:53" time="0.027" tests="1">
+    <testcase classname=" add Two numbers" name=" add Two numbers" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

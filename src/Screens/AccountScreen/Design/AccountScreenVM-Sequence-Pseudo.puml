@@ -1,0 +1,230 @@
+@startuml
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+participant Caller
+participant AccountScreenVM as VM
+participant SqliteStorage as DB
+participant AppCenterExceptionLogger as ex
+participant CycleCountSqliteStorage as CCDB
+
+title useEffect()
+autonumber
+Caller->VM++:Invoke **useEffect()**
+activate Caller
+VM->VM: Invoke **init()**
+VM-->Caller--: Return
+deactivate Caller
+
+==PSEUDOCODE==
+hnote across
+
+INVOKE **init()**
+RETURN
+end note
+newpage init()
+autonumber
+Caller -> VM: Invoke **init()**
+activate Caller
+activate VM
+alt#ALTBACKGROUND TRY
+    VM -> DB++: Invoke **getDBConnection()** and store in **dbInstance** variable
+    DB -->VM: Return
+    DB--
+    alt#ALTBACKGROUND #POSITIVERESPONSE if(dbInstance is defined)
+        VM -> DB++:Invoke **currentUserInfo** and pass **dbInstance** as parameter and store in **userInfo** variable 
+        DB --> VM: Return
+        DB--
+        alt#ALTBACKGROUND  if(userInfo?.Phone is defined)
+            VM -> VM: Invoke **phoneSplit()**
+            VM -> VM: Set **UserDetails** and **SelectedDB**
+        else #NEGATIVEERESPONSE else
+            VM -> VM: Reset navigation stack and go to **Login**
+        end
+    end
+    VM -> VM: Invoke **AsyncStorage.getItem('choosed-option')** and store in **mode** variable
+    alt#ALTBACKGROUND #POSITIVERESPONSE if(mode is 'Cycle')
+        VM -> VM: Set **IsCycleCount** to true
+    end
+else #NEGATIVEERESPONSE CATCH
+    VM->ex++:Invoke **exceptionLogger** and pass **error** as parameter
+    ex -->VM:Return
+    deactivate ex
+    VM-->Caller:Return
+    deactivate Caller
+    deactivate VM
+end
+
+==PSEUDOCODE==
+hnote across
+
+**TRY**
+    INVOKE **getDBConnection()** and store in **dbInstance** variable
+    IF check whether dbInstance is defined THEN
+        INVOKE **currentUserInfo** and pass **dbInstance** as parameter and store in **userInfo** variable
+        IF check whether userInfo?.Phone is defined THEN
+            INVOKE **phoneSplit()**
+            SET **UserDetails** and **SelectedDB**
+        ELSE 
+            RESET navigation stack and go to **Login**
+    INVOKE **AsyncStorage.getItem('choosed-option')** and store in **mode** variable
+    IF check whether mode is 'Cycle' THEN
+        SET **IsCycleCount** to true
+
+**CATCH**
+INVOKE  **exceptionLogger** and pass **error** as parameter
+end note
+
+
+newpage logOutUser()
+autonumber
+Caller -> VM: Invoke **logOutUser()**
+activate Caller
+activate VM
+alt#ALTBACKGROUND TRY
+    VM -> VM: Invoke **AsyncStorage.clear()**
+    VM -> DB++: Invoke **getDBConnection()** and store in **dbInstance** variable
+    DB --> VM: Return
+    DB--
+    alt#ALTBACKGROUND #POSITIVERESPONSE if(dbInstance is defined)
+        VM -> DB++: Invoke **deleteAllTables(dbInstance)**
+        DB --> VM: Return
+        DB--
+    end
+    VM -> CCDB++: Invoke **getCycleDBConnection()** and store in **db** variable
+    CCDB --> VM: Return
+    CCDB--
+    alt#ALTBACKGROUND #POSITIVERESPONSE if(db is defined)
+        VM -> CCDB++: Invoke **removeAllItems(db)**
+        CCDB --> VM: Return
+        CCDB--
+    end
+    VM -> VM: Reset navigation stack and go to **Login**
+    VM --> Caller: Return
+
+else #NEGATIVEERESPONSE CATCH
+    VM->ex++:Invoke **exceptionLogger** and pass **error** as parameter
+    ex -->VM:Return
+deactivate ex
+    VM-->Caller:Return
+deactivate VM
+deactivate Caller
+
+end
+
+
+==PSEUDOCODE==
+hnote across
+
+**TRY**
+    INVOKE **AsyncStorage.clear()**
+    INVOKE **getDBConnection()** and store in **dbInstance** variable
+    IF check whether dbInstance is defined THEN
+        INVOKE **deleteAllTables(dbInstance)**
+    INVOKE **getCycleDBConnection()** and store in **db** variable
+    IF check whether db is defined THEN
+        INVOKE **removeAllItems(db)**
+    RESET navigation stack and go to **Login**
+
+**CATCH**
+INVOKE  **exceptionLogger** and pass **error** as parameter
+end note
+
+newpage navigateToAbout
+
+
+autonumber
+Caller -> VM:Invoke **navigateToAbout()**
+activate Caller
+activate VM
+VM -> VM: Navigate to **AboutUs**
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+
+==PSEUDOCODE==
+hnote across
+
+INVOKE **navigateToAbout()** function
+Navigate to AboutUs
+
+end note
+
+newpage navigateToSettings
+
+autonumber
+Caller -> VM:Invoke **navigateToSettings()**
+activate Caller
+activate VM
+VM -> VM: Invoke Navigate to **Settings**
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+
+==PSEUDOCODE==
+
+hnote across
+
+INVOKE **navigateToSettings()** function
+Navigate to Settings
+
+end note
+
+
+newpage changeDB
+
+autonumber
+Caller -> VM:Invoke **changeDB()**
+activate Caller
+activate VM
+VM -> VM: Invoke **setShowModal(false)**
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+
+==PSEUDOCODE==
+
+hnote across
+
+INVOKE **changeDB()** function
+Set **ShowModal** to **false**
+
+
+end note
+
+
+newpage closeModal
+
+autonumber
+Caller -> VM:Invoke **closeModal()**
+activate Caller
+activate VM
+VM -> VM: Invoke **setShowModal(false)**
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+
+==PSEUDOCODE==
+
+hnote across
+
+INVOKE **closeModal()** function
+Set **ShowModal** to **false**
+
+end note
+
+
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+title ApiResponseBO - class diagram
+package BOs{
+    package ApiResponseBO{
+        interface ApiResponseBO{
+            +errorCode: number,
+            +resultSet: string,
+            +message: string
+        }
+    } 
+}
+
+newpage 
+package BOs{
+    package ApiResponseBO{
+        interface ApiResponseBO{
+            +errorCode: number,
+            +resultSet: string,
+            +message: string
+        }
+    } 
+}
+package Services{
+    package AppShellService{
+        interface IAppShellService{
+            +getDownloadedCount(last: string = '',user: UserBO): Promise<ServiceResult<number | null>>
+            +fetchItems(userinfo: UserBO,currentCount: number,nextCount: number,lastItemId: string = '',lastBarCodeId: string = '',lastSyncDate: string = ''): Promise<ServiceResult<ItemBO[] | null>>
+        }
+    }
+}
+ApiResponseBO <-- IAppShellService
+@enduml

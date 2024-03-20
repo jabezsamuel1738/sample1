@@ -1,0 +1,41 @@
+@startuml SettingsScreen-ClassDiagram
+
+title SettingsScreen - ClassDiagram
+
+package Screens {
+    package SettingsScreenView{
+
+        class SettingsScreenView {
+            + downLoad : boolean
+            + upload : boolean
+            + changeUpload() : void
+            + changeDownload() : void
+            +  moveToAbout() : void
+        }
+        class useSettingsScreenVM{
+            + upload : boolean
+            + downLoad : boolean
+            + moveToAbout() : void
+            + init() : void
+            + changeDownload() : void
+            + changeUpload() : void  
+        }
+    }
+}
+
+
+package Helpers {
+    package AppCenterHelpers {
+        class AppCenterHelperExceptionLogger {
+
+        }
+    }
+}
+
+
+
+SettingsScreenView --> useSettingsScreenVM
+useSettingsScreenVM --> AppCenterHelperExceptionLogger
+
+
+@enduml

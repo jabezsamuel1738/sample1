@@ -1,0 +1,116 @@
+@startuml
+title UserBO - class diagram
+package BOs{
+    package UserBO{
+        interface UserBO{
+           +Id: number 
+           +CurrentDB: string 
+           +DB_Pwd: string 
+           +UserID: string 
+           +Name: string 
+           +BusinessUnitId: string 
+           +BusinessUnitName: string 
+           +Phone: string 
+           +Email: string 
+           +UniqueUserId: string 
+           +IsLoggedIn: boolean 
+           +Message: string 
+           +UploadChanges: boolean 
+           +DownloadLatest: boolean 
+           +IsModified: boolean 
+           +DeviceID: string 
+           +DownloadCount: number         
+        }
+    }
+}
+newpage 
+package BOs{
+    package UserBO{
+        interface UserBO{
+           +Id: number 
+           +CurrentDB: string 
+           +DB_Pwd: string 
+           +UserID: string 
+           +Name: string 
+           +BusinessUnitId: string 
+           +BusinessUnitName: string 
+           +Phone: string 
+           +Email: string 
+           +UniqueUserId: string 
+           +IsLoggedIn: boolean 
+           +Message: string 
+           +UploadChanges: boolean 
+           +DownloadLatest: boolean 
+           +IsModified: boolean 
+           +DeviceID: string 
+           +DownloadCount: number         
+        }
+    }
+}
+package Helpers{
+    package CycleCountSqliteStorage{
+        class CycleCountSqliteStorage{
+            + readUserInLocalDB(db: SQLiteDatabase): Promise<UserBO | null>
+        }
+    }
+    package SqliteStorage{
+        class SqliteStorage{
+            +currentUserInfoById(db: SQLiteDatabase,userId: string): Promise<UserBO | null>
+            +insertItemsInCommonDB(db: SQLiteDatabase,list: ItemBO[] | null,userinfolist: UserBO,lstsyncdate: string = ''): Promise<void>
+            +isItemPresent(db: SQLiteDatabase,itemBo: ItemBO,userBo: UserBO): Promise<void>
+            +insertUserInfo(db: SQLiteDatabase,user: UserBO): Promise<void>
+            +getAllUsers(db: SQLiteDatabase): Promise<UserBO[] | null>
+            +getItemDetails(db: SQLiteDatabase,users: UserBO,src: string = ''): Promise<ItemBO[] | null>
+            +checkItemExistence(db: SQLiteDatabase,items: ItemBO,user: UserBO): Promise<ItemBO | null>
+            +updateItems(db: SQLiteDatabase,items: ItemBO,user: UserBO): Promise<boolean>
+            +currentUserInfo(db: SQLiteDatabase): Promise<UserBO | null>
+            +readBarCodeListItemDetails(db: SQLiteDatabase,barcode: string = ''): Promise<ItemBO[] | null>
+        }
+    }
+}
+package Screens{
+    package AccountScreen{
+        class useAccountScreenVM{
+            +userDetails: UserBO
+        }
+    }
+    package CycleCountScreen{
+        class CycleCountScreenVM{
+            +downloadItems(user: UserBO): void
+        }
+    }
+    package InventoryAdjustmentScreen{
+        class useInventoryAdjustmentScreenVM{
+            +uploadItems(user: UserBO): void
+            +downloadItems(user: UserBO): void
+            +downloadAllItems(count: number,internetSpeed: number,lastSyncDate: string,userInfo: UserBO,syncDetail: ItemCatalogSyncDetailBO): void
+        }
+    }
+}
+package Services{
+    package AppShellServices{
+        interface IAppShellServices{
+            +getDownloadedCount(last: string,user: UserBO): Promise<ServiceResult<number | null>>
+            +fetchItems(user: UserBO,currentCount: number,nextCount: number,lastItemId: string,lastBarCodeId: string,lastSyncDate: string): Promise<ServiceResult<ItemBO[] | null>>
+        }
+    }
+    package InventoryServices{
+        interface IInventoryServices{
+            + fetchItems(user: UserBO,currentCount: number,nextCount: number,lastItemId: string,lastBarcodeId: string,lastDateTime: string): Promise<ServiceResult<ItemBO[] | null>>
+        }
+    }
+    package SplashScreenService{
+        interface ISplashScreenService{
+            +ValidateUser(username: string,password: string): Promise<ServiceResult<UserBO[] | null | any>>
+        }
+    }
+}
+UserBO <-- CycleCountSqliteStorage
+UserBO <-- SqliteStorage
+UserBO <-- useAccountScreenVM
+UserBO <-- CycleCountScreenVM
+UserBO <-- useInventoryAdjustmentScreenVM
+UserBO <-- IAppShellServices
+UserBO <-- IInventoryServices
+UserBO <-- ISplashScreenService
+@enduml

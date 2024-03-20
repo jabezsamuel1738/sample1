@@ -1,0 +1,641 @@
+@startuml InventoryAdjustmentScreen
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as A order 1
+participant InventoryAdjustmentScreen as B order 1
+participant SqliteStorage as C order 2
+participant AppCenterExceptionLogger as D order 3
+participant AppShellServices as E order 5
+
+
+autonumber 1
+title useFocusEffect()
+A -> B++ : **useFocusEffect()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Invoke **getAllItems()** method
+    end
+deactivate A
+
+==PSEUDO CODE==
+hnote across
+    Invoke the **getAllItems()** method
+    
+end note
+
+autonumber 1
+newpage getAllItems()
+A -> B++ : Invoke **getAllItems()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        B -> B : Update **isModalVisible** value to **true**
+        B -> C++ :  Invoke **getDBConnection()** method
+        C --> B-- : SQLiteDatabase | undefined
+        B -> B : Store the return value in **db** variable
+        alt #POSITIVERESPONSE db is not null
+            B -> C++ :  Invoke **getAllItemDetails(db)** method
+            C --> B-- : ItemBO[] | null
+            B -> B : Store the return value in **items** variable
+            B -> B : Update **itemListState** value to **items**
+        end
+
+        B -> B : Update **isModalVisible** value to **false**
+        
+    else #NEGATIVEERESPONSE CATCH
+        B -> D++ : Invoke **exceptionLogger()** method and send catch error as params
+        D --> B-- : return
+        B --> A-- : Return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+hnote across 
+    TRY
+        Update the  **isModalVisible** value to **true**
+        Call the  **getDBConnection()** method in SqliteStorage
+        Store the return value in **db** variable
+        IF DB is not null
+            Call the  **getAllItemDetails(DB)** method in SqliteStorage
+            A -> A : Store the return value in **items** variable
+            Update the **itemListState** value to the result of **items**
+        END
+        Update the **isModalVisible** value to **false**
+    CATCH Exception AS error
+        Call the **exceptionLogger()** method with error as parameter
+    END
+end note
+
+autonumber 1
+newpage syncTapped()
+ 
+A -> B++ : Invoke **syncTapped()**
+    activate A
+        alt#ALTBACKGROUND #POSITIVERESPONSE try
+            B -> C++ :  Invoke **getDBConnection()** method
+            C --> B-- : SQLiteDatabase | undefined
+            B -> B : Store the return value in **db** variable
+            alt #POSITIVERESPONSE db is not null
+                B -> C++ :  Invoke **currentUserInfo(db)** method
+                C --> B-- : User | null
+                B -> B : Store the return value in **user** variable
+                alt #POSITIVERESPONSE user is not null
+                    B -> B : Invoke **uploadItems(user)** method
+                else #NEGATIVEERESPONSE user is null
+                    B -> B : Throw new Error
+                end
+            else #NEGATIVEERESPONSE db is null
+                B -> B : Show toast notification with error message
+            end
+            
+
+        else #NEGATIVEERESPONSE Catch
+            B -> D++ : Invoke **exceptionLogger()** method and send catch error as params
+            D --> B-- : return
+            B --> A-- : Return
+        end
+    deactivate A
+
+    ==PSEUDO CODE==
+    hnote across
+        TRY
+            Call the **getDBConnection()** method in SqliteStorage
+            Store the return value in **db** variable
+            IF DB is not null
+                Call the **currentUserInfo(db)** method in SqliteStorage
+                Store the return value in **user** variable
+                IF User is not null
+                    Invoke **uploadItems(user)** method
+                ELSE
+                    Throw new Error
+                END
+            ELSE
+                Show toast notification with error message "Can't fetch user info"
+            END
+        CATCH Exception AS error
+            Invoke **exceptionLogger()** method with error as parameter
+        END
+
+    end note
+
+
+autonumber 1
+newpage  uploadItems(user: UserBO)
+
+A -> B++ : Invoke **uploadItems(user)**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        
+            B -> C++ :  Invoke **getDBConnection()** method
+            C --> B-- : SQLiteDatabase | undefined
+            B -> B : Store the return value in **db** variable
+            alt #POSITIVERESPONSE db is not null
+                B -> B : Update **loaderMessage** value to **Uploading changes...**
+                 B -> B : Update **loaderState** value to **true**
+                B -> C++ :  Invoke **getCountedItems(db, user.UserID)** method
+                C --> B-- : ItemBO[] | null
+                B -> B : Store the return value in **items** variable
+                B -> B : Store **items** in AsyncStorage using **countedItemsInventory** as key
+                B -> B : Check if items.length > 0
+                alt #POSITIVERESPONSE items.length > 0
+                    B -> B : Loop all the items and assign **''** to Description,ImageURL and **Name**
+                    B -> E++ : Invoke **updateItemList(items, user.UserID)** method
+                    E --> B-- : Response object
+                    B -> B : Update **loaderState* value to **false**
+                    alt #NEGATIVEERESPONSE response.status !== HttpStatus.Success
+                        B -> B : Show toast notification as **Can't upload items**
+                    end
+                end
+            end
+            B -> B : downloadItems(user);
+
+
+    else #NEGATIVEERESPONSE Catch
+        B -> B : Update **loaderState* value to **false**
+        B -> B : Show toast notification as **Can't upload items**
+        B -> D++ : Invoke **exceptionLogger()** method and send catch error as params
+        D --> B-- : return
+        B -> B : downloadItems(user);
+        B --> A-- : Return
+
+    end
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        TRY
+            Call the **getDBConnection()** method in SqliteStorage
+            Set loader message and state for uploading
+            Call the **getCountedItems(db, user.UserID)** method in SqliteStorage
+            Store items in AsyncStorage
+            Check if items.length > 0
+            IF items.length > 0
+                Update item properties (optional)
+                Invoke **updateItemList(items, user.UserID)** method in AppShellServices
+                IF response.status !== HttpStatus.Success
+                    Show toast notification for upload failure
+                    return
+                END
+            END
+        CATCH Exception AS error
+            Show toast notification for upload failure
+            Invoke **exceptionLogger()** method with error as parameter
+        END
+        Set loader state to false
+        Invoke **downloadItems(user)** method
+    end note
+
+
+autonumber 1
+newpage  toItemDetailScreen(item: ItemBO)
+
+A -> B++ : Invoke **toItemDetailScreen(item: ItemBO)**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Navigate to **Detail** screen with item as params
+        B --> A-- : Return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        Navigate to **Detail** screen with item as params
+    end note
+
+autonumber 1
+newpage  toAboutUsScreen()
+
+A -> B++ : Invoke **toAboutUsScreen()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Navigate to **AboutUs** screen
+        B --> A-- : Return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        Navigate to **AboutUs** screen
+    end note
+
+autonumber 1
+newpage  cancelToast()
+
+A -> B++ : Invoke **cancelToast()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Hide the Toast Message
+        B --> A-- : Return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        Hide the Toast Message using **Toast.hide()**
+    end note
+
+
+autonumber 1
+newpage downloadItems(user: UserBO)
+
+A -> B++ : Invoke **downloadItems(user)**
+    activate A
+        alt#ALTBACKGROUND #POSITIVERESPONSE try
+            B -> B : Update **loaderMessage** value to **Downloading latest count...**
+            B -> B : Update **loaderState** value to **true**
+            B -> B : Invoke **internetSpeedTest()** method
+            B -> B : Get the return response and save that in **internetSpeed** variable
+            B -> C++ : Invoke **getDBConnection()** method
+            C --> B-- : SQLiteDatabase | undefined
+            B -> B : Store the return value in **db** variable
+            alt #POSITIVERESPONSE db is not null
+                B -> B : Create **itemCatalogSyncDetail** variable with ItemCatalogSyncDetailBO type
+                B -> C++ : Invoke **readLastSyncDateTimeInLocalDB(db, itemCatalogSyncDetail)** method
+                C --> B-- : return string
+                B -> B : Store the return value in **lastSync** variable
+                B -> E++ : Invoke **AppShellServices.getDownloadedCount(lastSync, user)** method
+                E --> B-- : retun number | null
+                B -> B : Check if response.status === HttpStatus.Failed
+                alt #NEGATIVEERESPONSE response.status === HttpStatus.Failed
+                    B -> B : Show toast notification as **Download count is failed**
+                else #POSITIVERESPONSE response.status === HttpStatus.Success && response.data !== null
+                    B -> B : Invoke **downloadAllItems(response.data, internetSpeed, lastSync, user, itemCatalogSyncDetail)** method
+                else
+                    B -> B : Show toast notification as **Download count is 0**
+                end
+            end
+                
+        else #NEGATIVEERESPONSE Catch
+            B -> B : Show toast notification as **Can't get download count**
+            B -> D++ : Invoke **exceptionLogger()** method and send catch error as params
+            D --> B-- : return
+            B --> A-- : return
+        end
+       
+    deactivate A
+
+    ==PSEUDO CODE==
+    hnote across
+        Update loader message to "Downloading latest count..."
+        Update loader state to true
+        Call internetSpeedTest() to get internet speed
+        Call getDBConnection() in SqliteStorage to get database connection
+        IF db is not null
+            Create itemCatalogSyncDetail object
+            Call readLastSyncDateTimeInLocalDB(db, itemCatalogSyncDetail) to get lastSyncDateTime
+            IF response.status is HttpStatus.Failed
+                Show toast notification as "Download count is failed"
+                Return
+            END
+            IF response.status is HttpStatus.Success and response.data is not null
+                Call downloadAllItems(response.data, internetSpeed, lastSync, user, itemCatalogSyncDetail)
+            ELSE IF response.status is HttpStatus.Success and response.data is null
+                Show toast notification as "Download count is 0"
+                Return
+            END
+        ELSE IF db is null
+            Show toast notification as "Can't get download count"
+            Return
+        END
+    CATCH Exception AS error
+        Show toast notification as "Can't get download count"
+        Invoke exceptionLogger() with error as parameter
+    END
+        
+    end note
+
+
+autonumber 1
+newpage downloadAllItems(count: number, internetSpeed: number, lastSyncDate: string, userInfo: UserBO, syncDetail: ItemCatalogSyncDetailBO)
+A -> B++ : Invoke **downloadAllItems(count, internetSpeed, lastSyncDate, userInfo, syncDetail)**
+    activate A
+        alt#ALTBACKGROUND #POSITIVERESPONSE try
+            B -> B : Initialize empty array **items**
+            B -> C++ : Invoke **getDBConnection()** method
+            C --> B-- : SQLiteDatabase | undefined
+            B -> B : Store the return value in **db** variable
+            alt #POSITIVERESPONSE db is not null
+                B -> B : Check if internetSpeed < 0
+                alt #NEGATIVEERESPONSE internetSpeed < 0
+                    B -> B : Show toast notification as "Internet connection required"
+                else #POSITIVERESPONSE
+                    B -> B : Initialize variables **start**, **itemId**, **barcodeId**
+                    B -> B : Set count to minimum of count and 200
+                    loop #POSITIVERESPONSE from start to count + defaultFetchCount - 1 with step defaultFetchCount
+                        B -> B : Check if start equals count
+                        alt #POSITIVERESPONSE start equals count
+                            B -> B : Break the loop
+                        end
+                        B -> B : Check if end equals 0
+                        alt #POSITIVERESPONSE end equals 0
+                            B -> B : Increment end by defaultFetchCount
+                        end
+                        B -> B : Check if end > count
+                        alt #POSITIVERESPONSE end > count
+                            B -> B : Set end to count
+                        end
+
+                        B -> C++ : Invoke **AppShellServices.fetchItems(userInfo, start, end, itemId, barcodeId, lastSyncDate)** method
+                        C --> B-- : Response object
+                        B -> B : Check if response.status is HttpStatus.NotFound
+                        alt #NEGATIVEERESPONSE response.status is HttpStatus.NotFound
+                            B -> B : Show toast notification as "Data is empty"
+                            B -> B : Break the loop
+                        end
+                        B -> B : Update start to end
+                        B -> B : Initialize temp array with response.data or empty array
+                        B -> B : Push temp items into items array
+                        B -> B : Update itemId and barcodeId for the next iteration
+                    end
+                    
+                        
+
+                   
+                    alt #POSITIVERESPONSE items.length equals count
+                        B -> C++ : Invoke **readLastSyncDateTimeInLocalDB(db, syncDetail)** method
+                        C --> B-- : LastSyncDateTime
+                        B -> B : Store the return response in **lastSyncDate** variable
+                        B -> C++ : Invoke **insertItemsInCommonDB(db, items, userInfo, lastSyncDate)** method
+                        C --> B-- : return
+                        
+                        B -> C++ : Invoke **getAllItemDetails(db)** method
+                        C --> B-- : retun ItemBO[] | null
+                        B -> B : Store the return value in **dbItems** variable
+                        B -> B : Update loader state, itemCount, popup message, and set popup state to true
+                        B -> B : Set data.current to items
+                        B -> B : Get current UTC time and convert to Eastern Time
+                        B -> B : Format the date using moment.js and update syncDetail
+                        B -> B : Invoke **insertLastSyncDateTimeInLocalDB(db, syncDetail)** method
+                        B -> B : Update the  **loaderState** value to **false**
+                    else #NEGATIVEERESPONSE items.length not equals count
+                        B -> B : Update loader state to false, itemCount, popup message, and set popup state to true
+                    end
+
+                    B -> B : Get countedItemsInventory from AsyncStorage and store 
+                    B -> B : Check if getCountedItemfromLocal is truthy
+                    alt #POSITIVERESPONSE getCountedItemfromLocal is not null
+                        B -> B : Parse getCountedItemfromLocal to get parsedItems
+                        B -> C++ : Invoke **updateItemList(db, parsedItems, userInfo)** method
+                        C --> B-- : return
+                    end
+                end
+            end
+            
+        else #NEGATIVEERESPONSE Catch
+            B -> B : Show toast notification as "Can't download data, Error occurred"
+            B -> E++ : Invoke **exceptionLogger()** method and send catch error as params
+            E --> B-- : Return
+            B -> B : Set loader state to false
+            B --> A-- : return
+        end
+        
+    deactivate A
+
+    ==PSEUDO CODE==
+    hnote across
+        TRY
+            Initialize an empty array 'items'
+            Call the 'getDBConnection()' method in SqliteStorage
+            IF db is not null
+                Check if internetSpeed is less than 0
+                IF internetSpeed is less than 0
+                    Show toast notification as "Internet connection required"
+                ELSE
+                    Initialize variables 'start', 'itemId', 'barcodeId'
+                    Set count to the minimum of count and 200
+                    Loop from start to count + defaultFetchCount - 1 with step defaultFetchCount
+                        Check if start equals count
+                        IF start equals count
+                            Break the loop
+                        END
+                        Check if end equals 0
+                        IF end equals 0
+                            Increment end by defaultFetchCount
+                        END
+                        Check if end is greater than count
+                        IF end is greater than count
+                            Set end to count
+                        END
+                        Invoke 'AppShellServices.fetchItems(userInfo, start, end, itemId, barcodeId, lastSyncDate)' method
+                        IF response.status is HttpStatus.NotFound
+                            Show toast notification as "Data is empty"
+                            Break the loop
+                        END
+                        Update start to end
+                        Initialize temp array with response.data or an empty array
+                        Push temp items into the 'items' array
+                        Update 'itemId' and 'barcodeId' for the next iteration
+                    END
+
+                    IF items.length equals count
+                        Invoke 'readLastSyncDateTimeInLocalDB(db, syncDetail)' method
+                        Get the lastSyncDateTime from the response
+                        Store the lastSyncDateTime in 'lastSyncDate' variable
+                        Invoke 'insertItemsInCommonDB(db, items, userInfo, lastSyncDate)' method
+                        Invoke 'getAllItemDetails(db)' method
+                        Get the items from the database or an empty array
+                        Update loader state, itemCount, popup message, and set popup state to true
+                        Set data.current to items
+                        Get current UTC time and convert to Eastern Time
+                        Format the date using moment.js and update syncDetail
+                        Invoke 'insertLastSyncDateTimeInLocalDB(db, syncDetail)' method
+                        Update the 'loaderState' value to false
+                    ELSE
+                        Update loader state to false, itemCount, popup message, and set popup state to true
+                    END
+
+                    Get countedItemsInventory from AsyncStorage
+                    Check if 'getCountedItemfromLocal' is truthy
+                    IF getCountedItemfromLocal is not null
+                        Parse getCountedItemfromLocal to get 'parsedItems'
+                        Invoke 'updateItemList(db, parsedItems, userInfo)' method
+                    END
+                END
+            END
+        CATCH Exception AS error
+            Show toast notification as "Can't download data, Error occurred"
+            Invoke 'exceptionLogger()' method with 'error' as a parameter
+            Update loader state value to false
+        END
+        
+    end note
+
+autonumber 1
+newpage internetSpeedTest()
+A -> B++ : Invoke **internetSpeedTest()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        B -> B : Create a new Date 'date1'
+        B -> B : Fetch 'https://raw.githubusercontent.com/TheProfs/socket-mem-leak/master/10mb-sample.json'
+        B -> B : Check if response is OK
+        alt #POSITIVERESPONSE response is OK
+            B -> B : Create a new Uint8Array 'data' from the response arrayBuffer
+            B -> B : Create a new Date 'date2'
+            B -> B : Calculate speed as rounded value of data.length / 1024 / (date2.getTime() - date1.getTime()) / 1000
+            B --> A : Return speed
+        else #NEGATIVEERESPONSE response is not OK
+            B --> A : return 0
+        end
+    else #NEGATIVEERESPONSE Catch
+        B -> D++ : Invoke 'exceptionLogger()' method with 'error' as parameter
+        D --> A-- : retun 0
+        B --> A-- : return
+    end
+deactivate A
+
+ ==PSEUDO CODE==
+    hnote across
+        TRY
+            Create a new Date 'date1'
+            Fetch the 10mb-sample.json from 'https://raw.githubusercontent.com/TheProfs/socket-mem-leak/master/10mb-sample.json'
+            IF response is OK
+                Create a new Uint8Array 'data' from the response arrayBuffer
+                Create a new Date 'date2'
+                Calculate the 'speed' as the rounded value of data.length / 1024 / (date2.getTime() - date1.getTime()) / 1000
+                Return the calculated speed
+            END
+            Return 0
+        CATCH Exception AS error
+            Invoke 'exceptionLogger()' method with 'error' as a parameter
+            Return 0
+        END
+    end note
+
+
+autonumber 1
+newpage  dismissPopup()
+
+A -> B++ : Invoke **dismissPopup()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Update **popupState** value to **true**
+        B --> A-- : return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        Update **popupState** value to **true**
+    end note
+
+
+autonumber 1
+newpage  navigateToScanner()
+
+A -> B++ : Invoke **navigateToScanner()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Navigate to "Scanner" Screen
+        B --> A-- : return
+    end
+    
+deactivate A
+
+==PSEUDO CODE==
+    hnote across
+        Navigate to "Scanner" Screen using **navigation.navigate('Scanner');**
+    end note
+
+
+autonumber 1
+newpage onSearchItem()
+A -> B++ : Invoke **onSearchItem()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        B -> B : Update **loaderMessage** value to "Searching..."
+        B -> B : Update **loaderState** value to true
+        B -> C++ : Invoke **getDBConnection()** method
+        C --> B-- : SQLiteDatabase | undefined
+        B -> B : Store the return value in **db** variable
+        alt #POSITIVERESPONSE db is not null
+            B -> C++ : Invoke **currentUserInfo(db)** method
+            C --> B-- : User | null
+            B -> B : Store the return value in **user** variable
+            alt #POSITIVERESPONSE user is not null
+                B -> C++ : Invoke **getItemDetails(db, user, textInput)** method
+                C --> B-- : ItemBO[] | null
+                B -> B : Store the return value in **result** variable
+                alt #POSITIVERESPONSE result is truthy
+                    B -> B : Update **itemListState** value to result
+                end
+            end
+        end
+        B -> B : Update **loaderState** value to false
+    else #NEGATIVEERESPONSE catch 
+        B -> D++ : Invoke **exceptionLogger(error)** method
+        D --> B-- : return
+        B --> A-- : Return
+    end
+
+deactivate A
+
+==PSEUDO CODE==
+hnote across
+    TRY
+        Update the **loaderMessage** value to "Searching..."
+        Update the **loaderState** value to true
+        Call the **getDBConnection()** method in SqliteStorage
+        IF SQLiteDatabase is not null
+            Call the **currentUserInfo(db)** method in SqliteStorage
+            IF User is not null
+                Call the **getItemDetails(db, user, textInput)** method in SqliteStorage
+                IF result is truthy
+                    Update the **itemListState** value to result
+                END
+            END
+        END
+        Update the **loaderState** value to false
+    CATCH Exception AS error
+        Invoke the **exceptionLogger(error)** method
+    END
+end note
+
+autonumber 1
+newpage ontextChange()
+A -> B++ : Invoke **ontextChange(value)**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Update **textInput** value to the provided parameter
+        B -> B : Check if trimmed **value** is an empty string
+        alt #NEGATIVEERESPONSE value is an empty string
+            B -> B : Update **itemListState** value to the current data
+        end
+        B --> A-- : return
+    end
+   
+deactivate A
+
+==PSEUDO CODE==
+hnote across
+    Invoke the **ontextChange(value)** method with a parameter value
+    Update the **textInput** value to the provided parameter
+    Check if trimmed **value** is an empty string
+    IF value is an empty string
+        Update the **itemListState** value to the current data
+    END
+end note
+
+@enduml
+
+
+
+

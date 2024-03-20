@@ -1,0 +1,15 @@
+@startuml
+title InvenoryStackBO - class diagram
+package BOs{
+    package InventoryStackBO{
+        interface InvenoryStackBO {
+            +route: string 
+            +label: string 
+            +component: any 
+            +focused: any 
+            +unfocused: any 
+        }
+    }
+}
+
+@enduml

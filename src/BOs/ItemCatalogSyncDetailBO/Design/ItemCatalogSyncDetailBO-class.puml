@@ -1,0 +1,40 @@
+@startuml
+title ItemCatalogSyncDetailBO - class diagram
+package BOs{
+    package ItemCatalogSyncDetailBO{
+        interface ItemCatalogSyncDetailBO{
+            +Id: number 
+            +BusinessUnitId: string 
+            +LastItemSyncDatetime: string 
+            +DBName: string 
+        }
+    }
+}
+newpage
+package BOs{
+    package ItemCatalogSyncDetailBO{
+        interface ItemCatalogSyncDetailBO{
+            +Id: number 
+            +BusinessUnitId: string 
+            +LastItemSyncDatetime: string 
+            +DBName: string 
+        }
+    }
+}
+package Helpers{
+    package SqliteStorage{
+        class SqliteStorage{
+            +insertLastSyncDateTimeInLocalDB(db: SQLiteDatabase,syncDetail: ItemCatalogSyncDetailBO): Promise<void> 
+        }
+    }
+}
+package Screens{
+    package InventoryAdjustmentScreen{
+        class useInventoryAdjustmentScreenVM{
+            +downloadItems(user: UserBO): void
+        }
+    }
+}
+ItemCatalogSyncDetailBO <-- SqliteStorage
+ItemCatalogSyncDetailBO <-- useInventoryAdjustmentScreenVM
+@enduml

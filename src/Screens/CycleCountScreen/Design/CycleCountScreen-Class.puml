@@ -1,0 +1,111 @@
+@startuml CycleCountScreen - Class
+title CycleCountScreen - Class Diagram
+package Screens {
+    package CycleCountScreen{
+        class CycleCountScreenView{
+
+            + currentStatus: string
+            + data:ItemDetailsBO[]
+            + message: string
+            + syncing: boolean
+            + settingNeed: boolean
+            + navigateToDetails(item: ItemDetailsBO): void
+            + onChangeStatus(userChoice: 'Pending' | 'Counted'):void
+            + onClickSync(): void
+            + onClickAbout(): void
+            + goToSettings(): void
+            + closeModal(): void
+            + panResponder(): PanResponderInstance
+
+        }
+
+        class CycleCountScreenVM {
+                + currentStatus: 'Pending' | 'Counted'
+                + data: ItemDetailsBO[]
+                + syncing: boolean
+                + message: string
+                + settingNeed: boolean
+                + init():void
+                + getCounted(db: SQLiteDatabase): void
+                + getPending(db: SQLiteDatabase): void
+                + onChangeStatus(userChoice: 'Pending' | 'Counted'): void
+                + onClickSync(): void
+                + downloadItems(user: UserBO): void
+                + cancelToast(): void
+                + onClickScan(): void
+                + onClickAbout(): void
+                + navigateToDetails(item: ItemDetailsBO): void
+                + goToSettings(): void
+                + closeModal(): void
+                + panResponder(): PanResponderInstance
+        }
+    }
+}
+
+
+package Helpers{
+    
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+
+    package CycleCountSqliteStorage{
+
+        class CycleCountSqliteStorage{
+                    
+                + getCycleDBConnection():Promise<SQLiteDatabase | undefined>
+                + getPendingItems(database: SQLiteDatabase): Promise<ItemDetailsBO[] | null>
+                + getCountedItems(database: SQLiteDatabase): Promise<ItemDetailsBO[] | null>
+                + removeItem(database: SQLiteDatabase,itemIds: string[],): Promise<boolean>
+                + addItemList(database: SQLiteDatabase,itemList: ItemDetailsBO[]): Promise<void>
+        }
+         
+         
+    }
+    
+    package SqliteStorage{
+        class SqliteStorage{
+
+            + getDBConnection(): Promise<SQLiteDatabase | undefined>
+            + currentUserInfo(db: SQLiteDatabase): Promise<UserBO | null>
+
+        }
+        
+    }
+
+}
+
+package BOs{
+    package UserBO{
+        interface UserBO
+    }
+
+    package ItemDetailsBO{
+        interface ItemDetailsBO
+
+    }
+
+}
+
+package Services{
+    package CycleCountService{
+        interface ICycleCountService{
+
+             +downloadCycleCountItems(itemsCount: number, userId: string): Promise<ServiceResult<ItemDetailsBO[] | null>
+             +updateCycleCountItems(items: ItemDetailsBO[],userId: string): Promise<ServiceResult<string[] | null>
+        
+        }
+    }
+}
+
+CycleCountScreenView--> CycleCountScreenVM
+CycleCountScreenVM --> ItemDetailsBO: uses
+CycleCountScreenVM --> UserBO: uses
+CycleCountScreenVM --> CycleCountSqliteStorage: uses
+CycleCountScreenVM --> SqliteStorage: uses
+CycleCountScreenVM --> ICycleCountService: uses
+CycleCountScreenVM --> AppCenterExceptionLogger: uses
+
+@enduml

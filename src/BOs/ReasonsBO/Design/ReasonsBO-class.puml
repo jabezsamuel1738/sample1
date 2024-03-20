@@ -1,0 +1,31 @@
+@startuml
+title ReasonsBO - class diagram
+package BOs{
+    package ReasonsBO{
+        interface ReasonsBO {
+            +Id: number 
+            +ReasonsCD: string 
+            +Description: string 
+        }
+    }
+}
+newpage 
+package BOs{
+    package ReasonsBO{
+        interface ReasonsBO {
+            +Id: number 
+            +ReasonsCD: string 
+            +Description: string 
+        }
+    }
+}
+package Helpers{
+    package SqliteStorage{
+        class SqliteStorage{
+            +readReasons(db: SQLiteDatabase): Promise<ReasonsBO[] | null>
+        }
+    }
+}
+ReasonsBO <-- SqliteStorage
+@enduml
+

@@ -1,0 +1,46 @@
+@startuml
+title ISplashScreenService - class diagram
+package Services{
+    package SplashScreenService{
+        interface ISplashScreenService{
+            +ValidateUser(username: string,password: string): Promise<ServiceResult<UserBO[] | null | any>>
+        }
+    }
+}
+package BOs{
+    package UserBO{
+        interface UserBO{
+
+        }
+    }
+}
+ISplashScreenService --> UserBO
+
+newpage
+title ValidateUser()
+package Services{
+    package SplashScreenService{
+        interface ISplashScreenService{
+            +ValidateUser(username: string,password: string): Promise<ServiceResult<UserBO[] | null | any>>
+        }
+    }
+}
+
+package Screens{
+    package SplashScreen{
+        class useSplashScreenVM{
+            +validateUser(userName: string, password: string): void
+        }
+    }
+}
+package Screens{
+    package LoginScreen{
+        class LoginScreenVM{
+            +onTaploginButton(): void
+        }
+    }
+}
+ISplashScreenService <-- LoginScreenVM
+ISplashScreenService <-- useSplashScreenVM
+
+@enduml

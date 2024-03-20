@@ -1,0 +1,201 @@
+@startuml CycleCountItemDetails
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as U
+participant CycleCountItemDeatilsVM as A
+participant CycleCountSQLiteStorage as B
+participant AppCenterExceptionLogger as C
+
+title useEffect()
+    U -> A: **useEffect()** 
+    activate U
+    activate A
+    A -> A: Invoke **init()**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        INVOKE **init()** for fetching data from route params
+
+    end note
+
+newpage init()
+
+
+    U -> A: Invoke **init()** 
+    alt #POSITIVERESPONSE props.route.params is defined
+        activate U
+        activate A
+        A -> A: Update **item** with props.route.params.item
+        A --> U: return
+        deactivate A
+        deactivate U
+    end
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        IF props.route.params is defined
+            UPDATE **item** with value of props.route.params.item
+
+    end note
+
+newpage navigateToAbout()
+
+
+    U -> A: Invoke **navigateToAbout()** 
+    activate U
+    activate A
+    A -> A: navigate to **AboutUs screen**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Navigate to the AboutUs screen using props.navigation
+
+    end note
+
+newpage navigateToSettings()
+
+
+    U -> A: Invoke **navigateToSettings()** 
+    activate U
+    activate A
+    A -> A: navigate to **Settings screen**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Navigate to the Settings screen using props.navigation
+
+    end note
+
+
+newpage goBack()
+
+
+    U -> A: Invoke **goBack()** 
+    activate U
+    activate A
+    A -> A: navigate to previous screen
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        NAVIGATE to the previous screen by INVOKING props.navigation.goBack()
+
+    end note
+
+newpage updateInLocalDB()
+
+    U -> A: Invoke **updateInLocalDB()** 
+    activate U
+    activate A
+    alt #POSITIVERESPONSE try
+        alt #POSITIVERESPONSE count is defined
+            A -> A : increment the **clicked** value by 1
+            A -> B : invoke **getCycleDBConnection()** to obtain the db connection
+            activate B
+            B --> A : return db: SQLiteDatabase | undefined
+            deactivate B
+            alt #POSITIVERESPONSE item.actualCount equals count or clicked greaterthan 1
+                alt #POSITIVERESPONSE item and item.actualCount and item.Id are defined
+                    A -> A : Assign **item.status** as "Counted"
+                    A -> A : Assign **item.actualCount** as **count**
+                    alt #POSITIVERESPONSE db is defined
+                        A -> B : invoke **updateItems()** with db and item
+                        activate B
+                        B--> A : return 
+                        deactivate B
+                        A -> A : Navigate to previous screen
+                    end
+                end
+            else #NEGATIVEERESPONSE
+                A -> A : Update **modalvisible** as true
+            end
+        else #NEGATIVEERESPONSE catch
+            A -> A : Update **modalvisible** as true
+        end
+    else #NEGATIVEERESPONSE catch
+        A -> C : invoke **exceptionLogger()** with error obatined
+        activate C
+        C --> A : return
+        deactivate C
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+            IF **count** is defined
+                INCREMENT the **clicked** value by 1
+                INVOKE **getCycleDBConnection()** and establish the db connection
+                IF item.actualCount == count OR clicked > 1
+                    UPDATE **item.status** with value as "Counted"
+                    UPDATE **item.actualCount** with value **count**
+                    IF db is defined
+                        INVOKE **updateItems()** with db, **item** to update the item detail in local db
+                        NAVIGATE to the **previous screen** using **props.navigation.goBack()**
+            ELSE UPDATE is **modalVisible** with true
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+newpage okClicked()
+
+    U -> A: Invoke **okClicked** 
+    activate U
+    activate A
+    A -> A: Update **modalVisible** as false
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        UPDATE **modalVisible** with value as false
+
+    end note
+
+
+@enduml
+

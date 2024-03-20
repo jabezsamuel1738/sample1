@@ -1,0 +1,107 @@
+@startuml InventoryAdjustmentScreen-ClassDiagram
+
+title InventoryAdjustmentScreen - ClassDiagram
+
+package Screens {
+    package InventoryAdjustmentScreen{
+
+        class InventoryAdjustmentScreen {
+            + textInput : string
+            + itemListState : ItemBO[]
+            + loaderState : boolean
+            + loaderMessage : string
+            + itemsCount : number
+            + popupState : boolean
+            + popupMessage : string
+            + toItemDetailScreen(item: ItemBO) : void
+            + syncTapped() : void
+            + dismissPopup() :void
+            + toAboutUsScreen() : void
+            + navigateToScanner() : void
+            + onSearchItem () : void
+            + ontextChange () : void
+            + isModalVisible : boolean
+        }
+        class useInventoryAdjustmentScreenVM{
+            +itemListState : ItemBO[]
+            + textInput : string
+            + loaderState : boolean
+            + popupState : boolean
+            + loaderMessage : string
+            + popupMessage : string
+            + itemsCount : number
+            + isModalVisible : boolean
+            + data : ItemBO[]
+            + getAllItems() : void
+            + toItemDetailScreen(item: ItemBO) : void
+            + toAboutUsScreen() : void
+            + cancelToast() : void
+            + syncTapped() : void
+            + uploadItems() : void
+            + downloadItems() : void
+            + downloadAllItems() : void
+            + internetSpeedTest() : number
+            + dismissPopup() : void
+            + navigateToScanner() : void
+            + ontextChange() : void
+        }
+    }
+}
+
+package BOs {
+
+    package ItemBO {
+        interface ItemBO {
+
+        }
+    }
+
+    package UserBO {
+        interface UserBO {
+
+        }
+    }
+
+}
+
+package Helpers {
+
+    package SqliteStorage {
+        class SqliteStorage {
+            + currentUserInfo() : UserBO | null
+            + getAllItemDetails() : ItemBO[] | null
+            + getCountedItems() : ItemBO[] | null
+            + getDBConnection() : SQLiteDatabase | undefined
+            + getItemDetails() : ItemBO[] | null
+            + insertItemsInCommonDB() : void
+            + insertLastSyncDateTimeInLocalDB() : void
+            + readLastSyncDateTimeInLocalDB() : string
+            + updateItemList() : boolean
+        }
+    }
+
+    package Constants {
+        class AppConstant {
+
+        }
+    }
+
+    package AppCenterHelpers {
+        class AppCenterHelperExceptionLogger {
+
+        }
+    }
+
+
+}
+
+InventoryAdjustmentScreen --> useInventoryAdjustmentScreenVM
+
+useInventoryAdjustmentScreenVM --> ItemBO
+useInventoryAdjustmentScreenVM --> UserBO
+useInventoryAdjustmentScreenVM --> SqliteStorage
+useInventoryAdjustmentScreenVM --> AppConstant
+useInventoryAdjustmentScreenVM --> AppCenterHelperExceptionLogger
+
+
+@enduml

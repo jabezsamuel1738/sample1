@@ -1,0 +1,135 @@
+@startuml
+title CycleCountServices Sequence Diagram
+
+participant caller as User
+participant "CycleCountServices" as CCS
+participant "DependencyInjector" as DI
+participant "HttpClient" as HC
+hide footbox
+autonumber 1
+alt try
+User -> CCS++: downloadCycleCountItems(itemsCount, userId)
+activate User
+CCS -> DI: getInstances()
+activate DI
+DI --> CCS: BaseURL
+deactivate DI
+CCS -> CCS: Form URL with BaseURL, itemsCount and userId
+CCS -> HC: Invoke get(URL) using HttpClient instance
+activate HC
+HC --> CCS: response
+deactivate HC
+alt response.data && response.data.DownloadItemsResult
+    alt response.data.DownloadItemsResult.startsWith('Response Error')
+        CCS --> User: Return ServiceResult.Failed with message Items cannot Find and data null
+    else response.data.DownloadItemsResult.trim() === ""
+       CCS --> User: Return ServiceResult.Success with data empty array
+    else else
+        CCS --> User: Return ServiceResult.Failed with message Items cannot Find and data null
+    end
+           CCS --> User: Return ServiceResult.Success with data as api response
+
+end
+else Catch 
+ CCS --> User--: Return ServiceResult.Failed with message Service Exception and data null
+
+    deactivate User
+end
+
+==Pseudo Code==
+hnote across
+
+Try
+     Method downloadCycleCountItems is called with parameters itemsCount and userId
+     Invoke getInstances() using DependencyInjector to get the BaseURL 
+     URL is formed using BaseURL, itemsCount and userId
+     The format of the URL is '${BaseURL}CycleCount/Services/CycleCountService.svc/DownloadItems/?count=${itemsCount}&userid=${userId}'
+     HttpClient is used to make a GET request to the formed URL
+     The response from the API is returned to CycleCountServices
+     If the response data exists and DownloadItemsResult is present in the response data
+        If DownloadItemsResult starts with 'Response Error', ServiceResult.Failed is returned with a message 'Items cannot Find' and data null
+
+        If DownloadItemsResult is an empty string, ServiceResult.Success is returned with data as an empty array
+
+        ServiceResult.Success is returned with data as the API response
+
+     Else, ServiceResult.Failed is returned with a message 'Items cannot Find' and data null
+     
+Catch 
+    ServiceResult.Failed is returned with a message 'Service Exception' and data null
+
+endnote
+
+newpage updateCycleCountItems 
+autonumber 1
+alt try 
+User -> CCS++: updateCycleCountItems(items, userId)
+activate User
+CCS -> CCS: Initilize variables named count to 25 and iter to 0
+CCS -> CCS: Initilize an array of string named itemUpdated
+CCS -> DI++: getInstances()
+DI --> CCS--: BaseURL
+CCS -> CCS: Define header config
+loop iter is less than items length
+alt If iter + count is greater than items length 
+CCS -> CCS: Serialize and encode items in range of iter
+else else 
+CCS -> CCS: Serialize and encode items in range of iter and iter+count
+
+end
+CCS -> CCS: Increment iter with count
+CCS -> CCS: Create SOAP XML with encoded data and userId
+CCS -> CCS: form base url 
+CCS -> HC++: post(URL, soapXml, config) using HttpClient instance 
+HC --> CCS--: Response data
+CCS -> CCS: Split the response and push it in the itemUpdated array
+end
+alt itemUpdated has items
+  CCS --> User: ServiceResult.Success(itemUpdated)
+else itemUpdated is empty
+  CCS --> User: ServiceResult.Failed('Failed to upload items')
+end
+alt Error occurs
+  CCS --> User: ServiceResult.Failed('Service Exception', null)
+end
+
+else catch 
+CCS --> User--: Return ServiceResult.Failed with message Service Exception and data null
+deactivate User
+end
+==Pseudo Code==
+hnote across
+TRY
+    Initialize variables count to 0 and iter to 25
+    Initialize an array of string named itemUpdated
+    Get BaseURL from DependencyInjector instance using getInstances()
+    Define header config an object contains 'Content-Type': 'text/xml', Accept: 'text/xml',SOAPAction: 'http://tempuri.org/UploadItems',
+    Loop while iter is greater than items length
+        If iter + count is greater than items length 
+            Serialize and encode items in range of iter
+        else 
+            Serialize and encode items in range of iter and iter+count
+      
+        Increment iter with count
+        Create SOAP XML with encoded data and userId
+        soapXml = `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><UploadItems  xmlns="http://tempuri.org/"><item>${encodedStr}</item><Userid>${userId}</Userid></UploadItems></soap:Body></soap:Envelope>`
+        Form base url using BaseURL
+        URL = BaseURL + 'CycleCount/Services/CycleCountUpload.asmx';
+        Make post request using HttpClient instance with header, soapXml and url as params
+        Split the response in '<UploadItemsResult>' this tag and push it in the itemUpdated array
+      
+
+    If itemUpdated has items
+        Return ServiceResult.Success with itemUpdated
+    Else 
+      Return ServiceResult.Failed with message 'Failed to upload items'
+      
+    
+CATCH
+    Return ServiceResult.Failed with message 'Service Exception' and data null
+    
+endnote 
+@enduml
+
+
+

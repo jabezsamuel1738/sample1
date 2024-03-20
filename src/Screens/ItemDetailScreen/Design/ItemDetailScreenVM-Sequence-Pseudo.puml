@@ -1,0 +1,215 @@
+@startuml ItemDetailScreenVM
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as A order 1
+participant ItemDetailScreen as B order 1
+participant SqliteStorage as C order 2
+participant AppCenterExceptionLogger as D order 3
+participant AppShellServices as E order 5
+
+
+autonumber 1
+title useFocusEffect()
+A -> B++ : **useFocusEffect()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Update the **adjustmentDataState** variable value to **route.params.AdjustmentType**
+        B -> B : Update the **reasonState** variable value to **route.params.Reason**
+        B -> B : Update the **documentState** variable value to **quantityState**
+        B -> B : Update the **quantityState** variable value to **route.params.QTY**
+        B --> A-- : return
+    end
+deactivate A
+
+==PSEUDO CODE==
+hnote across
+    Update the **adjustmentDataState** variable value to **route.params.AdjustmentType**
+    Update the **reasonState** variable value to **route.params.Reason**
+    Update the **documentState** variable value to **quantityState**
+    Update the **quantityState** variable value to **route.params.QTY**
+end note
+
+
+
+autonumber 1
+newpage  goBack()
+A -> B++ : Invoke **goBack()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Navigate to Previous Screen
+        B --> A-- : Return
+    end
+    
+deactivate A
+==PSEUDO CODE==
+    hnote across
+        Navigate to Previous Screen using **navigation.goBack()**
+    end note
+
+autonumber 1
+newpage updateTapped()
+A -> B: Taps on update button
+alt#ALTBACKGROUND #POSITIVERESPONSE try
+    B -> C: getCConnection()
+    C --> B: Returns database connection
+    B -> C: currentUserInfo(C)
+    C --> B: Returns current user info
+
+    alt Current user is not null
+        B -> B: Validates quantityState with regex
+        alt quantityState is not valid
+            B -> A: Shows toast message "Enter the valid Item Count !"
+        else quantityState is empty or less than 0
+            B -> A: Shows toast message "Quantity should be greater than 0"
+        else reasonState is null
+            B -> A: Shows toast message "Select any reasons... !"
+        else adjustmentDataState is null
+            B -> A: Shows toast message "Select any adjustment type... !"
+        else adjustmentDataState is 'D' and actual quantity is less than or equal to quantityState
+            B -> A: Shows toast message "Count must be greater than actual"
+        else
+            B -> B: Invoke **quantityCheck(route.params)** and\n save the return response in **isQuantity** variable
+
+            alt quantity is valid
+                B -> B: Prepares ItemBO object
+                B -> C: updateItems(C, obj, user)
+                C --> B: Returns response
+                alt response is true
+                    B -> A: Shows toast message "Item updated.."
+                    B -> B: Invoke **goBack()** method
+                else
+                    B -> A: Shows toast message "Item not updated, Error occured"
+                end
+            else
+                B -> A: Shows toast message "Quantity entered should'nt be greater than available"
+            end
+        end
+
+    end
+else #NEGATIVEERESPONSE
+    B -> A: Shows toast message "Item not updated, Error occured"
+    B -> D : Invoke **exceptionLogger()** method and send catch error as params
+    D --> B : return
+    B --> A : Return
+
+end
+
+    ==PSEUDO CODE==
+    hnote across
+        Try
+            Get database connection
+            If database connection is available Then
+                Get current user information
+                If user information is available Then
+                    Validate quantityState with regular expression
+                    If quantityState is not valid Then
+                        Show toast message "Enter the valid Item Count !"
+                    Else If quantityState is empty or less than 0 Then
+                        Show toast message "Quantity should be greater than 0"
+                    Else If reasonState is null Then
+                        Show toast message "Select any reasons... !"
+                    Else If adjustmentDataState is null Then
+                        Show toast message "Select any adjustment type... !"
+                    Else If adjustmentDataState is 'D' and actual quantity is less than or equal to quantityState Then
+                        Show toast message "Count must be greater than actual"
+                    Else
+                        Check if quantity is valid
+                        If quantity is valid Then
+                            Prepare ItemBO object
+                            Update items in the database
+                            If update is successful Then
+                                Show toast message "Item updated.."
+                                Navigate back
+                            Else
+                                Show toast message "Item not updated, Error occured"
+                            End If
+                        Else
+                            Show toast message "Quantity entered should'nt be greater than available"
+                        End If
+                    End If
+                End If
+            End If
+        Catch error
+            Log the error
+            Show toast message "Item not updated, Error occured"
+        End
+
+    end note
+
+autonumber 1
+newpage quantityCheck()
+
+A -> B: Invoke **quantityCheck** method
+alt#ALTBACKGROUND #POSITIVERESPONSE try
+    B -> B: Check adjustmentDataState
+    alt adjustmentDataState is 'I'
+        B -> A: Return true
+    else adjustmentDataState is not 'I'
+        B -> B: Parse item.QTY and Compare it with quantityState
+        alt quantityState > item.QTY
+            B -> A: Return false
+        else quantityState <= item.QTY
+            B -> A: Return true
+        end
+    end
+else #NEGATIVEERESPONSE
+    B -> A: Shows toast message "Item not updated, Error occured"
+    B -> D : Invoke **exceptionLogger()** method and send catch error as params
+    D --> B : return
+    B --> A : false
+end
+
+==PSEUDO CODE==
+    hnote across
+        Try
+            If adjustmentDataState is 'I' Then
+                Return True
+            Else
+                Set currQty to item.QTY converted to float
+                If quantityState converted to float is greater than currQty Then
+                    Return False
+                Else
+                    Return True
+                End If
+            End If
+        Catch error
+            Call exceptionLogger with parameter error
+            Return False
+        End Try
+    end note
+
+autonumber 1
+newpage  cancelToast()
+A -> B++ : Invoke **cancelToast()**
+activate A
+    alt#ALTBACKGROUND #POSITIVERESPONSE
+        B -> B : Hide the Toast Message
+        B --> A-- : Return
+    end
+    
+deactivate A
+==PSEUDO CODE==
+    hnote across
+        Hide the Toast Message using **Toast.hide()**
+    end note
+
+@enduml
+
+
+
+

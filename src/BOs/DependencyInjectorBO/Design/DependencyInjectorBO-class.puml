@@ -1,0 +1,32 @@
+@startuml
+title DependencyInjectorBO - class diagram
+package BOs{
+    package DependencyInjectorBO{
+        interface DependencyInjectorBO{
+            +BaseURL: string 
+            +InventoryServices: InventoryServices 
+            +AppShellServices: AppShellServices 
+            +CycleCountServices: CycleCountServices 
+        }
+    }
+}
+newpage 
+package BOs{
+    package DependencyInjectorBO{
+        interface DependencyInjectorBO{
+            +BaseURL: string 
+            +InventoryServices: InventoryServices 
+            +AppShellServices: AppShellServices 
+            +CycleCountServices: CycleCountServices 
+        }
+    }
+}
+package Helpers{
+    package DependencyInjector{
+        class DependencyInjector{
+            +getInstances(): DependencyInjectorBO
+        }
+    }
+}
+DependencyInjectorBO <-- DependencyInjector
+@enduml

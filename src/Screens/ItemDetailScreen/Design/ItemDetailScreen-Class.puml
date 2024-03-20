@@ -1,0 +1,73 @@
+@startuml ItemDetailScreen-ClassDiagram
+
+title ItemDetailScreen - ClassDiagram
+
+package Screens {
+    package ItemDetailScreen{
+        class ItemDetailScreen {
+            + adjustmentData : []
+            + adjustmentDataState : string
+            + setAdjustmentDataState : React.Dispatch<React.SetStateAction<string>>
+            + reason : []
+            + reasonState : string
+            + setReasonState : React.Dispatch<React.SetStateAction<string>>
+            + documentState : string
+            + setDocumentState : React.Dispatch<React.SetStateAction<string>>
+            + quantityState : string
+            + setQuantityState : React.Dispatch<React.SetStateAction<string>>
+            + goBack() : void
+            + updateTapped() : void
+        }
+
+        class useItemDetailScreenVM{
+            + adjustmentDataState : string
+            + reasonState : string
+            + documentState : string
+            + quantityState : string
+            + adjustmentData : []
+            + reason : []
+            + goBack() : void
+            + updateTapped() : void
+            + quantityCheck(item : ItemBO) : boolean
+            + cancelToast() : void   
+        }
+    }
+}
+
+
+package BOs {
+
+    package ItemBO {
+        interface ItemBO {
+
+        }
+    }
+
+}
+
+
+package Helpers {
+
+    package SqliteStorage {
+        class SqliteStorage {
+            + currentUserInfo(db: SQLiteDatabase) : UserBO | null
+            + getDBConnection() : SQLiteDatabase | undefined
+            + updateItems(db: SQLiteDatabase, items: ItemBO, user: UserBO) : boolean
+        }
+    }
+
+    package AppCenterHelpers {
+        class AppCenterHelperExceptionLogger {
+
+        }
+    }
+}
+
+
+
+ItemDetailScreen --> useItemDetailScreenVM
+useItemDetailScreenVM --> ItemBO
+useItemDetailScreenVM --> SqliteStorage
+useItemDetailScreenVM --> AppCenterHelperExceptionLogger
+
+@enduml

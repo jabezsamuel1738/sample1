@@ -1,0 +1,56 @@
+@startuml
+title ICycleCountService - class diagram
+package Services{
+    package CycleCountService{
+        interface ICycleCountService{
+            +downloadCycleCountItems(itemsCount: number,userId: string): Promise<ServiceResult<ItemDetailsBO[] | null>>
+            +updateCycleCountItems(items: ItemDetailsBO[],userId: string): Promise<ServiceResult<string[] | null>>
+        }
+    }
+}
+package BOs{
+    package ItemDetailsBO{
+        interface ItemDetailsBO {
+       
+        }
+    }
+}
+ICycleCountService --> ItemDetailsBO
+
+newpage 
+title downloadCycleCountItems()
+package Services{
+    package CycleCountService{
+        interface ICycleCountService{
+            +downloadCycleCountItems(itemsCount: number,userId: string): Promise<ServiceResult<ItemDetailsBO[] | null>>
+        }
+    }
+}
+
+package Screens{
+    package CycleCountScreen{
+        class CycleCountScreenVM{
+            +downloadItems(user: UserBO): void
+        }
+    }
+}
+ICycleCountService <-- CycleCountScreenVM
+
+newpage
+title updateCycleCountItems()
+package Services{
+    package CycleCountService{
+        interface ICycleCountService{
+            +updateCycleCountItems(items: ItemDetailsBO[],userId: string): Promise<ServiceResult<string[] | null>>
+        }
+    }
+}
+package Screens{
+    package CycleCountScreen{
+        class CycleCountScreenVM{
+            +onClickSync(): void
+        }
+    }
+}
+ICycleCountService <-- CycleCountScreenVM
+@enduml

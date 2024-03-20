@@ -1,0 +1,66 @@
+@startuml CycleCountItemDetails - Class Diagram
+
+title CycleCountItemDetails - Class Diagram
+
+package Screens {
+
+    package CycleCountItemDetails{
+
+        class CycleCountItemDetailsView{
+            + goBack(): void
+            + modalVisible: boolean
+            + navigateToAbout(): void
+            + navigateToSettings(): void
+            + okClicked(): void
+            + updateInLocalDB(): void
+            + count: string
+            + item: ItemDetailsBO | undefined
+            + setCount(): React.Dispatch<React.SetStateAction<string>>
+        }
+
+        class useCycleCountItemDetailsVM {
+            + item: ItemDetailsBO
+            + count: string
+            + modalVisible: boolean
+            + clicked: number
+            + init():void
+            + navigateToAbout(): void
+            + navigateToSettings(): void
+            + goBack(): void
+            + updateInLocalDB(): void
+            + okClicked(): void
+        }
+    }
+}
+
+package Helpers{
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+
+    package CycleCountSqliteStorage{
+
+        class CycleCountSqliteStorage{
+                    
+                + getCycleDBConnection():Promise<SQLiteDatabase | undefined>
+                + updateItems(database: SQLiteDatabase,entity: ItemDetailsBO | any): Promise<boolean>
+        }
+         
+         
+    }
+}
+
+package BOs{
+    package ItemDetailsBO{
+        interface ItemDetailsBO
+        
+    }
+}
+CycleCountItemDetailsView --> useCycleCountItemDetailsVM 
+useCycleCountItemDetailsVM --> ItemDetailsBO:uses
+useCycleCountItemDetailsVM --> CycleCountSqliteStorage:uses
+useCycleCountItemDetailsVM --> AppCenterExceptionLogger:uses
+
+@enduml

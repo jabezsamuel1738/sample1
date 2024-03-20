@@ -1,0 +1,79 @@
+@startuml AboutScreenVM
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as U
+participant AboutScreenVM as A
+
+
+title useEffect()
+    U -> A: **useEffect()** 
+    activate U
+    activate A
+    A -> A: Invoke **init()**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        INITIALIZE **React Component** using **useEffect()** and **init()**
+
+    end note
+
+newpage init()
+
+
+    U -> A: **init()** 
+    activate U
+    activate A
+    A -> A: update **currentVersion** with version 
+    A --> U: return
+    deactivate A
+    deactivate U
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        UPDATE **currentVersion** value with version obtained from package.json
+    end note
+
+
+newpage goBack()
+
+
+    U -> A: **goBack()** 
+    activate U
+    activate A
+    A -> A: Navigate to previous screen 
+    A --> U: return
+    deactivate A
+    deactivate U
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        NAVIGATE to **Previous screen** using **props.navigation.goBack()**
+    end note
+
+
+@enduml
+

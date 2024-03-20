@@ -1,0 +1,39 @@
+@startuml
+title DBDetailBO - class diagram
+package BOs{
+    package DBDetailsBO{
+        interface DBDetailsBO{
+            +id: number
+            +Userid: string
+            +DatabaseName: string
+        }
+    }
+}
+
+newpage 
+package BOs{
+    package DBDetailsBO{
+        interface DBDetailsBO{
+            +id: number
+            +Userid: string
+            +DatabaseName: string
+        }
+    }
+}
+package Helpers{
+    package CycleCountSqliteStorage{
+        class CycleCountSqliteStorage{
+            +insertDBDetails(db: SQLiteDatabase,dBDetails: DBDetailsBO): Promise<void>
+            +getDBDetails(db: SQLiteDatabase): Promise<DBDetailsBO | null>
+        }
+    }
+    package SqliteStorage{
+        class SqliteStorage{
+            +changeDBName(db: SQLiteDatabase,dbDetails: DBDetailsBO): Promise<void>
+            +getDBDetails(db: SQLiteDatabase): Promise<DBDetailsBO | null>
+        }
+    }
+}
+DBDetailsBO <-- CycleCountSqliteStorage
+DBDetailsBO <-- SqliteStorage
+@enduml

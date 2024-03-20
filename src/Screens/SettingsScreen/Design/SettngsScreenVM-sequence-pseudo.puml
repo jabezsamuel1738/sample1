@@ -1,0 +1,178 @@
+@startuml SettingsScreenVM
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as U
+participant SettingsScreenVM as A
+participant AppCenterExceptionLogger as B
+
+autonumber 1
+title useEffect()
+    U -> A: **useEffect()** 
+    activate U
+    activate A
+    A -> A: Invoke **init()**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        INVOKE **init()** for fetching data from route params
+
+    end note
+
+newpage init()
+autonumber 1
+
+    U -> A++: Invoke **init()**
+    activate U 
+    alt #POSITIVERESPONSE try
+        A -> A : Get "enable-upload" value from localstorage
+        alt #POSITIVERESPONSE enableUpload is 'true'
+            A -> A : Update **upload** with true
+        end
+        A -> A : Get "enable-download" value from localstorage
+        alt #POSITIVERESPONSE enableDownload is 'true'
+            A -> A : Update **download** with true
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> B : invoke **exceptionLogger()** with error obtained
+        activate B
+        B --> A : return
+        deactivate B
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+            GET enable-upload value from localstorage using **AsyncStorage.getItem('enable-upload')**
+            IF enableUpload == 'true'
+                UPDATE **upload** with value true
+            GET enable-download value from localstorage using **AsyncStorage.getItem('enable-download')**
+            IF enableDownload == 'true'
+                UPDATE **download** with value true
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+    end note
+
+newpage changeDownload()
+autonumber 1
+
+    U -> A: Invoke **changeDownload()** 
+    alt #POSITIVERESPONSE try
+        alt #POSITIVERESPONSE download is true
+            A -> A : Remove "enable-download" value from localstorage
+            A -> A : Update **download** with false
+        else #POSITIVERESPONSE
+            A -> A : Update "enable-download" value as "true" in localstorage
+            A -> A : Update **download** with true
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> B : invoke **exceptionLogger()** with error obatined
+        activate B
+        B --> A : return
+        deactivate B
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+            IF download == true
+                REMOVE enable-download value from localstorage using **AsyncStorage.removeItem("enable-download")**
+                UPDATE **download** with value false
+            ELSE
+                UPDATE enable-download value to "true" in localstorage using **AsyncStorage.setItem('enable-download', 'true')**
+                UPDATE **download** with value true
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+    end note
+
+
+newpage changeUpload()
+autonumber 1
+
+    U -> A: Invoke **changeUpload()** 
+    alt #POSITIVERESPONSE try
+        alt #POSITIVERESPONSE upload is true
+            A -> A : Remove "enable-upload" value from localstorage
+            A -> A : Update **upload** with false
+        else #POSITIVERESPONSE
+            A -> A : Update "enable-upload" value as "true" in localstorage
+            A -> A : Update **upload** with true
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> B : invoke **exceptionLogger()** with error obatined
+        activate B
+        B --> A : return
+        deactivate B
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+            IF upload == true
+                REMOVE enable-upload value from localstorage using **AsyncStorage.removeItem("enable-upload")**
+                UPDATE **upload** with value false
+            ELSE
+                UPDATE enable-upload value to "true" in localstorage using **AsyncStorage.setItem('enable-upload', 'true')**
+                UPDATE **upload** with value true
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+    end note
+
+newpage moveToAbout()
+autonumber 1
+
+    U -> A: Invoke **moveToAbout()** 
+    activate U
+    activate A
+    A -> A: navigate to the about screen 
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        INVOKE **moveToAbout()** for navigating to **AboutUs** screen
+
+    end note
+
+@enduml
+
