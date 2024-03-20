@@ -1,0 +1,175 @@
+@startuml 
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+autonumber 1
+participant caller as c
+participant LoginScreenVM as vm
+participant SplashScreenService as s 
+participant SqliteStorage as store
+participant AppCenterExceptionLogger as l
+title UseEffect()
+c -> vm++: Initilize or Change argument
+activate c 
+vm -> vm: Upadte **isModalVisible** with value from the parameter 
+vm --> c--: Return 
+deactivate c 
+
+==Pseudo Code==
+hnote across
+SET **isModalVisible** the value of isModalVisile from parameter using **setIsModalVisible**
+endnote
+
+newpage navigateToOption
+c -> vm++: Invoke **navigateToOption()**
+activate c
+vm -> vm: Invoke **AsyncStorage.setItem** with key as **choosed-option** and data as property **selectedOption**
+vm -> vm: Update **isModalVisible** to **false**
+alt#ALTBACKGROUND #NETURALRESPONSE if(selectedOption === 'Inventory')
+vm -> vm: Reset navigation stack and go to **Inventory adjustment screen**
+vm --> c: Return
+else #NETURALRESPONSE
+vm -> vm: Reset navigation stack and go to **Cycle count screen**
+vm --> c--: Return
+deactivate c
+end
+==Pseudo code==
+hnote across 
+**INVOKE** **AsyncStorage.setItem** with key as **choosed-option** and data as property **selectedOption**
+**UPDATE** isModalVisible to **false** using **setIsModalVisible()**
+**IF** selectedOption === 'Inventory'
+    **RESET** the navigation stack and push screen with name **InventoryStack**
+
+**ELSE**
+    **RESET** the navigation stack and push screen with name **CycleCountStack**
+endnote
+
+autonumber 1
+newpage onTaploginButton
+c -> vm++: Invoke **onTaploginButton**
+activate c
+alt#ALTBACKGROUND try 
+vm -> vm: Dismiss the keyboard
+alt#ALTBACKGROUND #NEGATIVEERESPONSE if properties userName and password is empty
+vm -> vm: Invoke showToast with **Enter the username and password** message and type as** **error**
+else #NEGATIVEERESPONSE else if userName is empty 
+vm -> vm: Invoke showToast with **Enter the username** message and type as** **error**
+else #NEGATIVEERESPONSE else if password is empty 
+vm -> vm: Invoke showToast with **Enter the password** message and type as** **error**
+else #POSITIVERESPONSE else
+vm -> vm: Set **loggingIn** to **true**
+vm -> vm: Set 'isModalVisible** to **true**
+vm -> s++: Invoke **ValidateUser** with property userName and password as parameters
+s --> vm--: Returns **ServiceResult<any>**
+alt#ALTBACKGROUND #NEGATIVEERESPONSE if result or result.data or result.data.ValidateUserResult is null
+vm -> vm: Invoke showToast with **Error while login, Please try again** **error**
+vm -> vm: Set 'isModalVisible** to **false**
+else #NEGATIVEERESPONSE else if result and result.data is defined and result.data.ValidateUserResult === 'Invalid Credentials'
+vm -> vm: Set 'isModalVisible** to **false**
+vm -> vm: Invoke showToast with **Invalid Credentials, Please try again** **error**
+else #NEGATIVEERESPONSE else if result is defined and result.message has 'Response Error'
+vm -> vm: Set 'isModalVisible** to **false**
+vm -> vm: Invoke showToast with **Response Error, Please try again** **error**
+else #POSITIVERESPONSE else
+vm -> vm: Parse the ValidateUserResult in data that is from response and store it in parseUser
+vm -> store++: Invoke **getDBConnection()**
+store -> vm--: Returns **SQLiteDatabase** instance or **undefined**
+alt#ALTBACKGROUND #POSITIVERESPONSE if response is defined
+vm -> store++: Invoke **insertUserInfo** with **SQLiteDatabase** instance and **first element of parseUser**
+store --> vm--: Returns 
+vm -> vm: Invoke **AsyncStorage.setItem** with **Username** as key and property **userName** as data
+vm -> vm: Invoke **AsyncStorage.setItem** with **Password** as key and property **password** as data
+end
+vm -> vm: Set **loggingIn** to **false**
+end
+end
+vm --> c: Return
+else #NEGATIVEERESPONSE catch
+vm -> vm: Set 'isModalVisible** to **false**
+vm -> vm: Invoke showToast with **Something went wrong, try again!** **error**
+vm -> l++: Invoke **exceptionLogger** and pass **error** as param
+l --> vm--: Returns
+vm --> c--: Return
+deactivate c
+end 
+==Pseudo code==
+hnote across
+**TRY**
+    **DISMISS** keyboard using **Keyboard.dismiss()**
+    **IF** property userName is empty && property password is empty 
+        **INVOKE** showToast with **Enter the username and password** message and type as** **error**
+    
+    **ELSE IF** property userName is empty
+        **INVOKE** showToast with **Enter the username** message and type as** **error**
+
+    **ELSE IF** property password is empty 
+        **INVOKE** showToast with **Enter the password** message and type as** **error**
+
+    **ELSE**
+        **SET** **loggingIn** to **true** using setLogginIn
+        **SET** **isModalVisible** to **true** using setIsModalVisible
+        **INVOKE** ValidateUser using instance of **SplashScreenService** with properties userName and password as parameters and store response in **result**
+        **IF** result or result.data or result.data.ValidateUserResult is undefined
+            **INVOKE** showToast with **Error while login, Please try again** message and type as** **error**
+            **SET** **isModalVisible** to **false** using setIsModalVisible
+
+        **ELSE IF** result and result.data is defiend and result.data.ValidateUserResult is 'Invalid Credentials'
+            **INVOKE** showToast with **Invalid Credentials, Please try again** message and type as** **error**
+            **SET** **isModalVisible** to **false** using setIsModalVisible
+
+        **ELSE IF** resut is defined and result.message has 'Response Error'
+            **INVOKE** showToast with **Response Error, Please try again** message and type as** **error**
+            **SET** **isModalVisible** to **false** using setIsModalVisible
+
+        **ELSE**
+            **PARSE** the result.data.ValidateUserResult string to object and assign it to **parseUser**
+            **INVOKE** getDBConnection() in SqliteStorage and assign response in **dbInstance**
+            **IF** dbInstance is defined 
+                **INVOKE** insertUserInfo with **dbInstance** and first element of **parseUser**
+                **INVOKE** **AsyncStorage.setItem** with key as **Username** and data as property **userName**
+                **INVOKE** **AsyncStorage.setItem** with key as **Password** and data as property **password**
+
+            **SET** **loggingIn** to **false** using setLogginIn
+
+
+**CATCH**
+    **INVOKE** showToast with **Something went wrong, try again!** message and type as** **error**
+    **SET** **isModalVisible** to **false** using setIsModalVisible
+    **INVOKE** **exceptionLogger** and pass **error** as param
+endnote
+
+autonumber 1
+newpage showToast
+c -> vm++: Invoke **showToast(message: string, type: 'success'|'failure')** 
+activate c 
+vm -> vm: Invoke **show** using **Toast** with type as **tomatoToast**, position and message for text1 and props
+vm --> c--: Return 
+deactivate c
+==Pseudo Code==
+hnote across 
+INVOKE **show** method of the **Toast** object, passing in an object with the following properties:
+  - **type**: 'tomatoToast'
+  - **position**: 'bottom'
+  - **text1**: the message passed into showToast
+  - **props**: an object with the following properties:
+    - **icon**: if the type passed into showToast is 'success', use the tick image, otherwise use the failure image
+    - **cancelCallback**: a function that calls the hide method of the Toast object when invoked
+endnote
+@enduml
+
+
+
+
+

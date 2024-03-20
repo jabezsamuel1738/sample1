@@ -1,0 +1,81 @@
+@startuml AccountScreen- Class Diagram
+
+title AccountScreen- Class Diagram
+
+package Screens{
+
+    package AccountScreen{
+
+        class AccountScreenView{
+            + userDetails: UserBO | undefined
+            + changeDB(): void
+            + navigateToAbout(): void
+            + logOutUser
+            + options:[]
+            + selectedDB:string
+            + setSelectedDB: React.Dispatch<React.SetStateAction<string>>
+            + setShowModal: React.Dispatch<React.SetStateAction<boolean>>
+            + showModal: boolean
+            + isCycleCount: boolean
+            + navigateToSettings(): void
+            + formattedPhone:string
+        }
+    
+        class useAccountScreenVM{
+    
+            + userDetails:UserBO
+            + selectedDB: string
+            + showModal: boolean
+            + isCycleCount: boolean
+            + formattedPhone: string
+            + init(): void
+            + changeDB(): void
+            + logOutUser(): void
+            + navigateToAbout(): void
+            + navigateToSettings(): void
+            + closeModal(): void
+            
+        }
+    }
+}
+
+package BOs{
+
+    package UserBO{
+
+        interface UserBO
+
+    }
+}
+
+package Helpers{
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+    package SqliteStorage{
+        class SqliteStorage{
+
+            + getDBConnection(): Promise<SQLiteDatabase | undefined>
+            + currentUserInfo(db: SQLiteDatabase): Promise<UserBO | null>
+            + deleteAllTables: (db: SQLiteDatabase): Promise<void>
+        }
+
+        class CycleCountSqliteStorage{
+                    
+                + getCycleDBConnection():Promise<SQLiteDatabase | undefined>
+                + FetchScannedBarcodeItem(database: SQLiteDatabase,barcode: string): Promise<ItemDetailsBO | null>
+        }
+        
+    }
+}
+
+AccountScreenView --> useAccountScreenVM
+useAccountScreenVM -->UserBO: uses
+useAccountScreenVM --> CycleCountSqliteStorage: uses
+useAccountScreenVM --> SqliteStorage: uses
+useAccountScreenVM --> AppCenterExceptionLogger: uses
+
+
+@enduml

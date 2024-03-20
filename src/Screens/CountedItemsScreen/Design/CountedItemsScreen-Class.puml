@@ -1,0 +1,58 @@
+@startuml CountedItems-ClassDiagram
+
+title CountedItems - ClassDiagram
+
+package Screens {
+    package CountedItemsScreen{
+        class CountedItemsScreenView {
+            + countedItems : ItemBO[]
+            + toItemDetailScreen(item: ItemBO) : void
+            + isModalVisible : boolean
+            + toAboutUsScreen() : void
+            + navigateToScanner() : void
+        }
+
+        class useCountedItemsScreenVM{
+            + isModalVisible : boolean
+            + countedItems : ItemBO[]
+            + toAboutUsScreen() : void
+            + loadData() : void
+            + toItemDetailScreen(item: ItemBO) : void
+            + navigateToScanner() : void
+        }
+    }
+}
+
+package BOs {
+
+    package ItemBO {
+        interface ItemBO {
+
+        }
+    }
+
+}
+
+package Helpers {
+
+    package SqliteStorage {
+        class SqliteStorage {
+            + currentUserInfo(db: SQLiteDatabase) : UserBO | null
+            + getDBConnection() : SQLiteDatabase | undefined
+            + getCountedItems((db: SQLiteDatabase, userId: string)) : ItemBO | null
+        }
+    }
+
+    package AppCenterHelpers {
+        class AppCenterHelperExceptionLogger {
+
+        }
+    }
+}
+
+CountedItemsScreenView --> useCountedItemsScreenVM
+useCountedItemsScreenVM --> ItemBO
+useCountedItemsScreenVM --> SqliteStorage
+useCountedItemsScreenVM --> AppCenterHelperExceptionLogger
+
+@enduml

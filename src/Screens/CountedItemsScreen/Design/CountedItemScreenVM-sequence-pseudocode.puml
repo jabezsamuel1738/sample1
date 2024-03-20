@@ -1,0 +1,138 @@
+@startuml AboutScreenVM
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as U
+participant CountedItemScreenVM as A
+participant AppCenterExceptionLogger as B
+participant SQLiteStorage as C
+
+
+title useEffect()
+    U -> A: **useFocusEffect()** 
+    activate U
+    activate A
+    A -> A: Invoke **loadData()**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        INVOKE **loadData()** when the page loading
+
+    end note
+
+newpage loadData()
+
+    participant Caller as U
+    participant CountedItemScreenVM as A
+    participant AppCenterExceptionLogger as B
+    participant SQLiteStorage as C
+
+    U -> A: **loadData()** 
+    activate U
+    activate A
+    alt #POSITIVERESPONSE try
+        A -> A : Update **modalVisible** as true
+        A -> C : Invoke **getDBConnection()** to establish the db connection
+        activate C
+        C --> A : return db: SQLiteDatabase | undefined
+        deactivate C
+        alt #POSITIVERESPONSE db defined
+            A -> C : Invoke **currentUserInfo()** with db to obtain the user details
+            activate C
+            C --> A : return user: UserBO | null
+            deactivate C
+            alt #POSITIVERESPONSE user is defined
+                A -> C : Invoke **getCountedItems()** with db and user.userID to obtain the counted items from LOCAL DB
+                activate C
+                C --> A : return items: ItemBO[]
+                deactivate C
+                A -> A : Update **countedItems** with returned items
+            end
+            A -> A : Update **modalVisible** value as false
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> B : invoke **exceptionLogger()** with error obatined
+        activate B
+        B --> A : return
+        deactivate B
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+            UPDATE **modalVisible** with value true
+            INVOKE **getDBConnection()** and establish the db connection
+            IF db is defined
+                INVOKE **currentUserInfo()** with db to obtain the user details
+                IF user is defined
+                    INVOKE **getCountedItems()** with db, user.userID to obtain the counted items from local db
+                    UPDATE the **countedItems** with db response of **items**
+                UPDATE is **modalVisible** with false
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+    end note
+
+
+newpage toItemDetailScreen()
+
+
+    U -> A: **toItemDetailScreen()** 
+    activate U
+    activate A
+    A -> A: Navigate to Detail screen with param values item
+    A --> U: return
+    deactivate A
+    deactivate U
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        NAVIGATE to **Detail screen** with **route.params as item** using **navigation.navigate("Detail", item)**
+    end note
+
+newpage navigateToScanner()
+
+
+    U -> A: **navigateToScanner()** 
+    activate U
+    activate A
+    A -> A: Navigate to Scanner screen 
+    A --> U: return
+    deactivate A
+    deactivate U
+
+
+    == PSEUDO CODE ==
+
+    hnote across
+        NAVIGATE to **Scanner screen** using **navigation.navigate("Scanner")**
+    end note
+
+
+@enduml
+

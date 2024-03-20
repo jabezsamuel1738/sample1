@@ -1,0 +1,142 @@
+@startuml
+title ItemBO - class diagram
+package BOs {
+    package ItemBO {
+        interface ItemBO {
+            +Id?: number;
+            +ActualCount?: string;
+            +Count?: string;
+            +FirstCount?: string;
+            +ItemID: string;
+            +Name?: string;
+            +Description: string;
+            +BuisnessUnit: string;
+            +UOM: string;
+            +BarcodeID: string;
+            +SERIAL_CONTROL: string;
+            +Item_Image: string;
+            +Location?: string;
+            +Stock_Level_1: string;
+            +Stock_Level_2: string;
+            +Stock_Level_3: string;
+            +Stock_Level_4: string;
+            +ImageURL?: string;
+            +Status?: string;
+            +LastUpdated: string;
+            +LockedTo: string;
+            +AdjustmentType?: string;
+            +Document?: string;
+            +Reason?: string;
+            +QTY: string;
+            +DBName?: string;
+            +serial_id?: string;
+            +PhyBU: string;
+            +ISA_CRIB_IDENT : string
+        }
+    }
+}
+
+newpage 
+package BOs {
+    package ItemBO {
+        interface ItemBO {
+            +Id?: number;
+            +ActualCount?: string;
+            +Count?: string;
+            +FirstCount?: string;
+            +ItemID: string;
+            +Name?: string;
+            +Description: string;
+            +BuisnessUnit: string;
+            +UOM: string;
+            +BarcodeID: string;
+            +SERIAL_CONTROL: string;
+            +Item_Image: string;
+            +Location?: string;
+            +Stock_Level_1: string;
+            +Stock_Level_2: string;
+            +Stock_Level_3: string;
+            +Stock_Level_4: string;
+            +ImageURL?: string;
+            +Status?: string;
+            +LastUpdated: string;
+            +LockedTo: string;
+            +AdjustmentType?: string;
+            +Document?: string;
+            +Reason?: string;
+            +QTY: string;
+            +DBName?: string;
+            +serial_id?: string;
+            +PhyBU: string;
+            +ISA_CRIB_IDENT : string
+        }
+    }
+}
+package Helpers{
+    package SqliteStorage{
+        class SqliteStorage{
+            +insertItemsInCommonDB(db: SQLiteDatabase,list: ItemBO[] | null,userinfolist: UserBO,lstsyncdate: string = ''): Promise<void>
+            +isItemPresent(db: SQLiteDatabase,itemBo: ItemBO,userBo: UserBO): Promise<void>
+            +insertItem<T>(db: SQLiteDatabase,tableName: string,item: ItemBO): Promise<void>
+            +getItemDetails(db: SQLiteDatabase,users: UserBO,src: string = ''): Promise<ItemBO[] | null>
+            +getAllItemDetails(db: SQLiteDatabase): Promise<ItemBO[] | null> 
+            +checkItemExistence(db: SQLiteDatabase,items: ItemBO,user: UserBO): Promise<ItemBO | null>
+            +updateItems(db: SQLiteDatabase,items: ItemBO,user: UserBO): Promise<boolean>
+            +readBarCodeListItemDetails(db: SQLiteDatabase,barcode: string = ''): Promise<ItemBO[] | null>
+            +getCountedItems(db: SQLiteDatabase,userId: string): Promise<ItemBO[] | null>
+            +updateItemList(db: SQLiteDatabase,itemsList: ItemBO[],user: UserBO): Promise<boolean>
+        } 
+    }
+}
+package Screens{
+    package Components{
+        package ListRenderItemComponent{
+            interface ListRenderItemProps{
+                +item: ItemBO
+            }
+        }
+    }
+    package CountedItemsScreen{
+        class useCounteditemsScreenVM{
+            +countedItems: ItemBO[]
+            +toItemDetailScreen(item: ItemBO): void
+            +loadData(): void
+        }
+    }
+    package InventoryAdjustmentScreen{
+        class useInventoryAdjustmentScreenVM{
+            +itemListState: ItemBO[]
+            +data: ItemBO[]
+            +toItemDetailScreen(item: ItemBO): void
+            +uploadItems(user: UserBO): void
+            +downloadAllItems(count: number,internetSpeed: number,lastSyncDate: string,userInfo: UserBO,syncDetail: ItemCatalogSyncDetailBO): void
+        }
+    }
+    package ItemDetailScreen{
+        class useItemDetailScreenVM{
+            +updateTapped(): void
+            +quantityCheck(item: ItemBO): void
+        }
+    }
+}
+package Services{
+    package AppShellServices{
+        interface IAppShellService{
+            +updateItemList(itemList: ItemBO[],userId: string): Promise<ServiceResult<boolean>>
+            +fetchItems(user: UserBO,currentCount: number,nextCount: number,lastItemId: string,lastBarCodeId: string,lastSyncDate: string): Promise<ServiceResult<ItemBO[] | null>>
+        }
+    }
+    package InventoryServices{
+        interface IInventoryServices{
+            + fetchItems(user: UserBO,currentCount: number,nextCount: number,lastItemId: string,lastBarcodeId: string,lastDateTime: string): Promise<ServiceResult<ItemBO[] | null>>
+        }
+  }
+}
+ItemBO <-- SqliteStorage
+ItemBO <-- ListRenderItemProps
+ItemBO <-- useCounteditemsScreenVM
+ItemBO <-- useInventoryAdjustmentScreenVM
+ItemBO <-- useItemDetailScreenVM
+ItemBO <-- IAppShellService
+ItemBO <-- IInventoryServices
+@enduml

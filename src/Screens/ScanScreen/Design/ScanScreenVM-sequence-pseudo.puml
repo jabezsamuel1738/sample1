@@ -1,0 +1,177 @@
+plantuml
+@startuml
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant caller as c
+participant ScanScreenVM as vm
+participant CycleCountSqliteStorage as cc
+participant SqliteStorage as s
+participant AppCenterExceptionLogger as l
+autonumber 1
+title useScanScreenVM
+c -> vm++: Invoke **useScanScreenVM**
+activate c
+alt#ALTBACKGROUND try 
+vm -> vm: Invoke **requestPermission()** ans assign response in request
+alt#ALTBACKGROUND #NEGATIVEERESPONSE if request.valueOf() or hasPermission is false
+vm -> vm: Invoke **setCameraActive** with **false**
+else #POSITIVERESPONSE else
+vm -> vm: Invoke **setCameraActive** with **true**
+end
+else #NEGATIVEERESPONSE catch
+vm -> l++: Invoke **exceptionLogger** and pass **error** as param
+l --> vm--: Returns
+end
+vm --> c--: Return
+deactivate c
+
+==Pseudo Code==
+hnote across 
+
+**TRY**
+    **INVOKE** requestPermission and assign returned value to request
+    **IF** request.valueOf() is true or hasPermission is true
+        **INVOKE** setCameraActive with true
+    **ELSE**
+        **INVOKE** setCameraActive with false
+    **END IF**
+
+**CATCH** error
+    **INVOKE** exceptionLogger with error as parameter
+**END TRY-CATCH**
+   
+endnote 
+
+autonumber 1
+ newpage onCodeScanned
+c -> vm++: Invoke **onCodeScanned(codes: code[])**
+activate c
+alt#ALTBACKGROUND try 
+vm -> vm: Set **isFetching** to **true**
+alt#ALTBACKGROUND #NEGATIVEERESPONSE if codes.length === 0
+vm -> vm: Do nothing
+else #POSITIVERESPONSE else
+vm -> vm: Get the first code value and convert it to number
+vm -> vm: Invoke **AsyncStorage.getItem** with 'choosed-option' as key 
+alt#ALTBACKGROUND #POSITIVERESPONSE if instance === 'Cycle'
+vm -> cc++: Invoke **getCycleDBConnection()**
+cc --> vm--: Returns **SQLiteDatabase** instance or **undefined**
+alt#ALTBACKGROUND #POSITIVERESPONSE if db is defined
+vm -> cc++: Invoke **FetchScannedBarcodeItem** with **db** and **qrValue.toString()**
+cc --> vm--: Returns **any** or **undefined**
+alt#ALTBACKGROUND #POSITIVERESPONSE if result is defined
+vm -> vm: Navigate to 'CycleCountDetail' with {item: result}
+end
+end
+else #POSITIVERESPONSE else
+vm -> s++: Invoke **getDBConnection()**
+s --> vm--: Returns **SQLiteDatabase** instance or **undefined**
+alt#ALTBACKGROUND #POSITIVERESPONSE if db is defined
+vm -> s++: Invoke **readBarCodeListItemDetails** with **db** and **qrValue.toString()**
+s --> vm--: Returns **any[]** or **undefined**
+alt#ALTBACKGROUND #POSITIVERESPONSE if result is defined and result.length !== 0
+vm -> vm: Navigate to 'Detail' with result[0]
+end
+end
+end
+end
+vm --> c: Return
+else #NEGATIVEERESPONSE catch
+vm -> l++: Invoke **exceptionLogger** and pass **error** as param
+l --> vm--: Returns
+vm --> c--: Return
+deactivate c
+end 
+
+==Pseudo Code==
+hnote across 
+
+TRY
+    SET isFetching to true
+    IF codes.length is not equal to 0
+        SET qrValue to the numeric value of the first code
+        GET 'choosed-option' from AsyncStorage and assign it to instance
+        IF instance is 'Cycle'
+            GET CycleDBConnection from CycleCountSqliteStorage and assign it to db
+            IF db is defined
+                FETCH ScannedBarcodeItem from CycleCountSqliteStorage with db and qrValue as param, assign it to result
+                IF result is defined
+                    NAVIGATE to 'CycleCountDetail' with {item: result}
+        ELSE
+            GET DBConnection from SqliteStorage and assign it to db
+            IF db is defined
+                READ BarCodeListItemDetails from SqliteStorage with db and qrValue as param, and assign it to result
+                IF result is defined and result.length is not equal to 0
+                    NAVIGATE to 'Detail' with result[0]
+
+CATCH error
+    LOG error using exceptionLogger
+
+endnote
+
+autonumber 1 
+newpage useFocusEffect() 
+c -> vm++: Initialize VM or when screen gets focus
+activate c 
+alt#ALTBACKGROUND try
+vm -> vm: Invoke **addEventListener** with arguments, a string **change** and a callback with a param using **AppState**
+alt#ALTBACKGROUND #NETURALRESPONSE If App is active 
+vm -> vm: Get the permission status of camera 
+alt#ALTBACKGROUND #POSITIVERESPONSE If permission is 'granted'
+vm -> vm: Update **isCameraActive** to **true**
+else #NEGATIVEERESPONSE else 
+vm -> vm: Update **isCameraActive** to **false**
+end 
+end
+alt#ALTBACKGROUND #NEGATIVEERESPONSE If property hasPermission is false 
+vm -> vm: Invoke **request()**
+else #POSITIVERESPONSE else 
+vm -> vm: Update **isCameraActive** to **true**
+end 
+vm -> vm: Remove listener in cleanup
+vm --> c: Return
+else #NEGATIVEERESPONSE catch
+vm -> l++: Invoke **exceptionLogger** and pass **error** as param
+l --> vm--: Returns 
+vm --> c--: Return
+deactivate c
+end
+==Pseudo Code== 
+hnote across
+**TRY**
+    INVOKE **addEventListener** with arguments, a string **change** and a callback with a param using **AppState** and assign it to **subscription**
+    **IF** app is active
+        GET camera permission status and assign it to **permission**
+        **IF** permission is 'granted'
+            SET **isCameraActive** to **true** using **setCameraActive()**
+
+        **ELSE** 
+            SET **isCameraActive** to **false** using **setCameraActive()**
+
+    **IF** property hasPermission is false 
+        INVOKE **request()**
+
+    **ELSE**
+        SET **isCameraActive** to **true** using **setCameraActive()**
+
+    INVOKE **remove()** using subscription in useFocusEffect **cleanup**
+
+**CATCH**
+    **INVOKE** **exceptionLogger** and pass **error** as param
+endnote 
+
+@enduml

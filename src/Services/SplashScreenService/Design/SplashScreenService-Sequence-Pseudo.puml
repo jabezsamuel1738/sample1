@@ -1,0 +1,71 @@
+@startuml SplashScreenService
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+
+participant Caller
+participant SplashScreenService
+participant DependencyInjector
+participant HttpClient
+
+Caller -> SplashScreenService: Invoke **ValidateUser** and pass **username** and **password** as parameters
+activate Caller
+activate SplashScreenService
+alt#ALTBACKGROUND  TRY
+        alt#ALTBACKGROUND if(username && password is not defined)
+            SplashScreenService->SplashScreenService:throw new Error('Parameters is of not the expected type')**
+        end
+            SplashScreenService -> DependencyInjector: Obtain **BaseURL** from **DependencyInjector.getInstances()**
+            activate DependencyInjector
+            DependencyInjector-->SplashScreenService:Return
+            deactivate DependencyInjector
+            SplashScreenService->SplashScreenService:Form **baseURL** using **username** and **password**
+            SplashScreenService -> HttpClient:Create an instance for **HttpClient<UserBO[], any>()** and store in **httpClient**
+            activate HttpClient
+            SplashScreenService-->HttpClient :Invoke **httpClient.get** with **baseURL** as parameter and store in **response** 
+            HttpClient-->SplashScreenService:Return **ServiceResult**
+            deactivate HttpClient
+
+else #NEGATIVEERESPONSE CATCH
+alt#ALTBACKGROUND if(error is instanceof Error)
+SplashScreenService -> SplashScreenService:Return **ServiceResult**
+SplashScreenService --> Caller: Return **ServiceResult.Failed** with **error** as parameter
+else
+SplashScreenService --> Caller: Return **ServiceResult.Failed** with **Unexpected Error Occured** as **error message**
+end
+deactivate SplashScreenService
+deactivate Caller
+end
+
+==PSEUDO CODE==
+hnote  across
+ Define the ValidateUser function with username and password as parameters
+ If username or password is not defined
+ Throw an error as Parameters is of not the expected type
+ Obtain the BaseURL from DependencyInjector.getInstances()
+ Form the baseURL using username and password
+ Create an instance for HttpClient<UserBO[], any>() and store in httpClient
+ Invoke httpClient.get with baseURL as parameter and store in response
+ Return the ServiceResult
+ If an error occurs during the execution of the try block
+ If the error is an instance of Error
+ Return ServiceResult.Failed with error as parameter
+ Return ServiceResult.Failed with 'Unexpected Error Occured' as error message
+end note
+
+@enduml

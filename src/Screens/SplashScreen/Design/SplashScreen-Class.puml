@@ -1,0 +1,63 @@
+@startuml SplashScreen - Class Diagram
+
+title SplashScreen - Class Diagram
+
+package Screens{
+    package SplashScreen{
+        class SplashScreenView{
+
+            + onTaploginButton(): void
+            
+
+        }
+
+        class SplashScreenVM{
+            
+            + checklogin(): void
+            + validateUser(userName: string, password: string): void
+            
+
+        }
+    }
+}
+
+package Helpers{
+
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+
+    
+    package SqliteStorage{
+        class SqliteStorage{
+
+            + getDBConnection(): Promise<SQLiteDatabase | undefined>
+            + insertUserInfo(db: SQLiteDatabase,user: UserBO): Promise<void>
+            + currentUserInfo(db: SQLiteDatabase): Promise<UserBO | null>
+        }
+        
+    }
+
+}
+
+package Services{
+    package SplashScreenService{
+        interface ISplashScreenService{
+
+            + ValidateUser(username: string,password: string): Promise<ServiceResult<UserBO[] | null | any>>
+
+        }
+    }
+}
+
+
+
+SplashScreenView --> SplashScreenVM
+SplashScreenVM --> SqliteStorage:uses
+SplashScreenVM --> ISplashScreenService:uses
+SplashScreenVM --> AppCenterExceptionLogger:uses
+
+
+@enduml

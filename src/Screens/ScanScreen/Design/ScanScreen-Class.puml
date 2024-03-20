@@ -1,0 +1,59 @@
+@startuml ScanScreen - Class Diagram
+
+title  ScanScreen - Class Diagram
+
+package Screens{
+    package ScanScreen{
+        class ScanScreen{
+
+            + codeScanner: CodeScanner
+            + device:  CameraDevice | undefined
+            + isCameraActive: boolean
+        }
+
+        class ScanScreenVM{
+
+            + hasPermission: boolean
+            + isCameraActive: boolean
+            + isFetching: boolean
+            + request(): void
+            + codeScanner(): void
+
+        }
+
+    }
+}
+
+package Helpers{
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+    package SqliteStorage{
+        class SqliteStorage{
+
+            + getDBConnection(): Promise<SQLiteDatabase | undefined>
+            + readBarCodeListItemDetails(db: SQLiteDatabase,barcode: string = ''): Promise<ItemBO[] | null>
+            + FetchScannedBarcodeItem(database: SQLiteDatabase,barcode: string): Promise<ItemDetailsBO | null>
+        }
+
+        class CycleCountSqliteStorage{
+                    
+                + getCycleDBConnection():Promise<SQLiteDatabase | undefined>
+                + removeAllItems(database: SQLiteDatabase): Promise<boolean>
+        }
+        
+    }
+}
+
+ScanScreen --> ScanScreenVM
+ScanScreenVM --> AppCenterExceptionLogger:uses
+ScanScreenVM --> SqliteStorage:uses
+ScanScreenVM --> CycleCountSqliteStorage:uses
+
+
+
+
+
+@enduml

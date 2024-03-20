@@ -1,0 +1,15 @@
+{
+  "excludes": {
+    "folderPath": [
+      "src/Assets/",
+      "src/BOs",
+      "src/Helpers/Constants",
+      "src/Helpers/ServiceHelpers",
+      "src/Helpers/Navigations"
+    ],
+    "extension": [".View", ".Props", ".Styles", ".interface"]
+  },
+  "includes": {
+    "folderPath": ["src/Screens/CalculatorScreen/CalculatorScreen.VM.ts"]
+  }
+}

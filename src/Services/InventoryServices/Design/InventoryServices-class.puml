@@ -1,0 +1,19 @@
+@startuml
+title IInventoryServices - class diagram
+package Services{
+    package InventoryServices{
+        interface IInventoryServices{
+            + fetchItems(user: UserBO,currentCount: number,nextCount: number,lastItemId: string,lastBarcodeId: string,lastDateTime: string): Promise<ServiceResult<ItemBO[] | null>>
+        }
+  }
+}
+
+package BOs{
+    package ItemBO{
+        interface ItemBO{
+
+        }
+    }
+}
+IInventoryServices --> ItemBO
+@enduml

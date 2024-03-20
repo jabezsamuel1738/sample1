@@ -1,0 +1,20 @@
+@startuml  AboutScreen - Class Diagram
+
+title  AboutScreen - Class Diagram
+
+package Screens{
+    package AboutScreen{
+        class AboutScreenView{
+            + currentVersion:string
+        }
+        class useAboutScreenVM {
+             + currentVersion: string
+             + init():void
+             + goBack(): void
+
+        }
+    }
+}
+
+AboutScreenView --> useAboutScreenVM
+@enduml

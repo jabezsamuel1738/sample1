@@ -1,0 +1,19 @@
+@startuml
+
+left to right direction
+package Pages{
+package CalculatorScreen{
+class CalculatorScreen{
+-vm : CalculatorScreenVM
+}
+
+class CalculatorScreenVM{
++ add(a:number,b:number) : number
++ subtract(a:number,b:number) : number
++ multiply(a:number,b:number) : number
++ divide(a:number,b:number) : number
+}
+CalculatorScreen --> CalculatorScreenVM : uses
+}
+}
+@enduml

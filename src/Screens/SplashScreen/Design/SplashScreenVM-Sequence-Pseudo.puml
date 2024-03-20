@@ -1,0 +1,210 @@
+@startuml SplashScreenVM
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFFd
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+participant Caller
+participant "SplashScreenVM" as VM
+participant "SqliteStorage" as B
+participant "AppCenterExceptionLogger" as D
+participant "SplashScreenService" as S
+
+title useFocusEffect()
+autonumber
+Caller->VM++:Invoke **useFocusEffect()**
+activate Caller
+VM->VM: Invoke **checklogin()**
+VM-->Caller--: Return
+deactivate Caller
+
+==PSEUDOCODE==
+hnote across
+
+INVOKE **checklogin()**
+RETURN
+
+end note
+
+newpage checklogin()
+autonumber
+Caller -> VM: Invoke **checklogin()**
+activate Caller
+activate VM
+alt#ALTBACKGROUND TRY
+VM -> VM: Invoke **fetchAndActivate()**
+VM -> VM: Invoke **fetch(0)**
+VM -> VM: Invoke **getValue('isUsable')** and store in **canUseApp** variable
+        alt#ALTBACKGROUND #POSITIVERESPONSE if(canUseApp.asBoolean() === true)
+        VM -> B: Invoke **getDBConnection()** and store in **dbInstance** variable
+        activate B
+        B --> VM: Return
+        deactivate B
+            alt#ALTBACKGROUND #POSITIVERESPONSE if(dbInstance)
+                VM -> B: Invoke **currentUserInfo(dbInstance)** and store in **userInfo** variable
+                activate B
+                B --> VM: Return
+                deactivate B
+                    alt#ALTBACKGROUND #NEGATIVEERESPONSE if(userInfo == null)
+                        VM -> VM: Reset navigation stack and go to **Login**
+                        VM-->Caller:Return
+                    else #POSITIVERESPONSE
+                        VM -> VM: Invoke **getItem('Username')** and store in **fetchUserName** variable
+                        VM -> VM: Invoke **getItem('Password')** and store in **fetchPassword** variable
+                        VM -> VM: Invoke **validateUser(fetchUserName, fetchPassword)**
+                    end
+    else
+        VM -> VM: Reset navigation stack and go to **Maintenance**
+        VM --> Caller: Return
+
+    end
+else #NEGATIVEERESPONSE CATCH
+VM -> D++: Invoke **exceptionLogger(ex)**
+D --> VM:Return
+deactivate D
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+end
+
+==PSEUDOCODE==
+hnote across
+
+**TRY**
+    INVOKE **fetchAndActivate()** 
+    INVOKE **fetch(0)** 
+    INVOKE **getValue('isUsable')** and store in **canUseApp** variable
+    IF check whether canUseApp.asBoolean() is true THEN
+        INVOKE **getDBConnection()** and store in **dbInstance** variable
+            IF check whether dbInstance is defined THEN
+                INVOKE **currentUserInfo(dbInstance)** and store in **userInfo** variable
+                    IF check whether userInfo is null THEN
+                        RESET navigation stack and go to **Login**
+                    ELSE
+                        INVOKE **getItem('Username')** from AsyncStorage and store in **fetchUserName** variable
+                        INVOKE **getItem('Password')** from AsyncStorage and store in **fetchPassword** variable
+                        INVOKE **validateUser(fetchUserName, fetchPassword)**
+    ELSE
+        RESET navigation stack and go to **Maintenance**
+**CATCH**
+INVOKE  **exceptionLogger(ex)**
+
+end note
+
+
+
+newpage validateUser()
+autonumber
+Caller -> VM: Invoke **validateUser()**
+activate Caller
+activate VM
+alt#ALTBACKGROUND TRY
+VM -> S: Invoke **ValidateUser()** and store in **response** variable
+activate S
+S --> VM: Return
+deactivate S
+    alt#ALTBACKGROUND #POSITIVERESPONSE if(response.data is valid)
+        VM -> VM: Parse **response.data.ValidateUserResult** and store in **userObj** variable
+            alt#ALTBACKGROUND #POSITIVERESPONSE if(userObj is not null)
+                VM -> B: Invoke **getDBConnection()** and store in **dbInstance** variable
+                activate B
+                B --> VM: Return
+                deactivate B
+                    alt#ALTBACKGROUND #POSITIVERESPONSE if(dbInstance is defined)
+                        VM -> B: Invoke **insertUserInfo()** and pass **dbInstance** and **userObj[0]** as parameters and store in **userInfo** variable
+                        activate B
+                        B --> VM: Return
+                        deactivate B
+                        VM -> VM: Invoke **AsyncStorage.getItem('choosed-option')** and store in **option** variable
+                            alt#ALTBACKGROUND if(option is null)
+                                VM -> VM: Navigate to **Login** with **isModalVisile: true**
+                                VM-->Caller:Return
+                            else if(option is equal to "Inventory")
+                                VM -> VM: Reset navigation stack and go to **InventoryStack**
+                                VM-->Caller:Return
+                            else
+                                VM -> VM: Reset navigation stack and go to **CycleCountStack**
+                                VM-->Caller:Return
+                            end
+                    end
+            else #NEGATIVEERESPONSE else
+                VM -> VM: Invoke **AsyncStorage.clear()**
+                VM -> VM: Navigate to **Login**
+                VM-->Caller:Return
+            end
+    else #NEGATIVEERESPONSE else
+        VM -> VM: Invoke **showToast()** with appropriate error message
+    end
+else #NEGATIVEERESPONSE CATCH
+VM -> D++: Invoke **exceptionLogger** and pass **ex** as parameter
+D --> VM:Return
+deactivate D
+VM-->Caller:Return
+deactivate Caller
+deactivate VM
+end
+
+==PSEUDOCODE==
+hnote across
+
+    TRY
+        INVOKE **ValidateUser(userName, password)** and STORE result in **response**
+        IF response.data is valid THEN
+            PARSE **response.data.ValidateUserResult** and STORE result in **userObj**
+            IF userObj is not null THEN
+                INVOKE **getDBConnection()** and STORE result in **dbInstance**
+                IF dbInstance is defined THEN
+                    INVOKE **insertUserInfo(dbInstance, userObj[0])** and STORE result in **userInfo**
+                    INVOKE **AsyncStorage.getItem('choosed-option')** and STORE result in **option**
+                    IF option is null THEN
+                        NAVIGATE to **Login** with **isModalVisile** as **true**
+                    ELSE IF option is equal to "Inventory" THEN
+                        RESET navigation stack and go to **InventoryStack**
+                    ELSE
+                        RESET navigation stack and go to **CycleCountStack**
+                    END IF
+                END IF
+            ELSE
+                INVOKE **AsyncStorage.clear()**
+                NAVIGATE to **Login**
+            END IF
+        ELSE
+            INVOKE **showToast()** with appropriate error message
+        END IF
+    CATCH ex
+        INVOKE **exceptionLogger(ex)**
+
+
+end note
+
+
+
+newpage showToast
+autonumber
+Caller-> VM++: Invoke **showToast(message: string, type: 'success'|'failure')**
+activate Caller
+VM -> VM: Invoke **show** using **Toast** with type as **type**, position and message for text1
+VM --> Caller--: Return
+deactivate Caller
+
+==PSEUDOCODE==
+
+hnote across
+INVOKE **show** method of the **Toast** object, passing in an object with the following properties:
+  - **type**:'type === 'success' ? 'successToast' : 'errorToast''
+  - **position**: 'bottom'
+  - **text1**: the message passed into showToast
+end note
+
+@enduml

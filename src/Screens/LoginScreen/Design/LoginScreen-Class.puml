@@ -1,0 +1,82 @@
+@startuml LoginScreen - Class
+
+package Screens{
+    package LoginScreen{
+        class LoginScreenView{
+
+            + onTaploginButton(): void
+            + setUserName(): React.Dispatch<React.SetStateAction<string>>
+            + setPassword(): React.Dispatch<React.SetStateAction<string>>
+            + isPasswordVisible: boolean
+            + setPasswordVisibility(): React.Dispatch<React.SetStateAction<boolean>>
+            + isModalVisible: boolean
+            + selectedOption: "Cycle" | "Inventory"
+            + selections:ModeBO[]
+            + setSelectedOption(): React.Dispatch<React.SetStateAction<"Cycle" | "Inventory">>
+            + navigateToOption: void
+            + loggingIn: boolean
+
+        }
+
+        class LoginScreenVM{
+            
+            + userName: string
+            + password: string
+            + isModalVisible: boolean
+            + selectedOption: 'Cycle' | 'Inventory'
+            + isPasswordVisible: boolean
+            + loggingIn: boolean
+            + showToast(message: string, type: 'success' | 'error'): void
+            + onTaploginButton(): void
+            + navigateToOption(): void
+
+        }
+    }
+}
+
+package Helpers{
+
+    package AppCenterHelpers{
+        class AppCenterExceptionLogger{
+            + exceptionLogger(error: any): void
+        }
+    }
+
+    
+    package SqliteStorage{
+        class SqliteStorage{
+
+            + getDBConnection(): Promise<SQLiteDatabase | undefined>
+            + insertUserInfo(db: SQLiteDatabase,user: UserBO): Promise<void>
+
+        }
+        
+    }
+
+}
+
+package BOs{
+    package ModeBO{
+        interface ModeBO
+    }
+}
+package Services{
+    package SplashScreenService{
+        interface ISplashScreenService{
+
+            + ValidateUser(username: string,password: string): Promise<ServiceResult<UserBO[] | null | any>>
+
+        }
+    }
+}
+
+
+
+LoginScreenView -->LoginScreenVM
+LoginScreenVM --> SqliteStorage:uses
+LoginScreenVM --> ModeBO:uses
+LoginScreenVM --> ISplashScreenService:uses
+LoginScreenVM --> AppCenterExceptionLogger:uses
+
+
+@enduml

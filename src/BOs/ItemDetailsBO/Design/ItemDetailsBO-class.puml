@@ -1,0 +1,94 @@
+@startuml
+title ItemDetailsBO - class diagram
+package BOs{
+    package ItemDetailsBO{
+        interface ItemDetailsBO{
+            +Id: number 
+            +BarcodeID: string 
+            +ItemID: string 
+            +Name: string 
+            +Description: string 
+            +ActualCount: string 
+            +Count: string 
+            +FirstCount: string 
+            +Location: string 
+            +Stock_Level_1: string 
+            +Stock_Level_2: string 
+            +Stock_Level_3: string 
+            +Stock_Level_4: string 
+            +ImageURL: string 
+            +Status: string 
+            +LastUpdated: string 
+            +LockedTo: string 
+            +UOM: string 
+            +Count_DTTM: string 
+        }
+    }
+}
+
+newpage 
+package BOs{
+    package ItemDetailsBO{
+        interface ItemDetailsBO{
+            +Id: number 
+            +BarcodeID: string 
+            +ItemID: string 
+            +Name: string 
+            +Description: string 
+            +ActualCount: string 
+            +Count: string 
+            +FirstCount: string 
+            +Location: string 
+            +Stock_Level_1: string 
+            +Stock_Level_2: string 
+            +Stock_Level_3: string 
+            +Stock_Level_4: string 
+            +ImageURL: string 
+            +Status: string 
+            +LastUpdated: string 
+            +LockedTo: string 
+            +UOM: string 
+            +Count_DTTM: string 
+        }
+    }
+}
+package Helpers{
+    package CycleCountSqliteStorage{
+        class CycleCountSqliteStorage{
+            +checkItemExistence(database: SQLiteDatabase,ItemDetail: ItemDetailsBO): Promise<boolean>
+            +FetchScannedBarcodeItem(database: SQLiteDatabase,barcode: string): Promise<ItemDetailsBO | null>
+            +getPendingItems( database: SQLiteDatabase): Promise<ItemDetailsBO[] | null>
+            +getNextItem(database: SQLiteDatabase,itemrecord: ItemDetailsBO): Promise<ItemDetailsBO | null>
+            +getCountedItems(database: SQLiteDatabase): Promise<ItemDetailsBO[] | null>
+            +updateItems(database: SQLiteDatabase,entity: ItemDetailsBO | any): Promise<boolean>
+            +addItemList(database: SQLiteDatabase,itemList: ItemDetailsBO[]): Promise<void>
+        }
+    }
+}
+package Screens{
+    package CycleCountItemDetails{
+        class useCycleCountItemDetailsVM{
+            +item: ItemDetailsBO
+        }
+    }
+    package CycleCountScreen{
+        class CycleCountScreenVM{
+            +data: ItemDetailsBO[]
+            +navigateToDetails(item: ItemDetailsBO): void
+        }
+    }
+}
+package Services{
+    package CycleCountServices{
+        interface ICycleCountServices{
+            +downloadCycleCountItems(itemsCount: number,userId: string): Promise<ServiceResult<ItemDetailsBO[] | null>>
+            +updateCycleCountItems(items: ItemDetailsBO[],userId: string): Promise<ServiceResult<string[] | null>>
+        }
+    }
+}
+ItemDetailsBO <-- CycleCountSqliteStorage
+ItemDetailsBO <-- useCycleCountItemDetailsVM
+ItemDetailsBO <-- CycleCountScreenVM
+ItemDetailsBO <-- ICycleCountServices
+
+@enduml

@@ -1,0 +1,513 @@
+@startuml CycleCountScreenVM
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFF
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+participant Caller as U
+participant CycleCountScreenVM as A
+participant CycleCountService as S
+participant CycleCountSQLiteStorage as B
+participant AppCenterExceptionLogger as C
+participant SQLiteDatabase as D
+
+' title useFocusEffect()
+
+U -> A: Invoke **useFocusEffect()** 
+activate U
+activate A
+A -> A: Invoke **init()**
+A --> U: return
+deactivate A
+deactivate U
+
+== PSEUDO CODE ==
+
+hnote across
+
+    INVOKE **init()** for fetching data with respect to currentStatus
+
+end note
+
+newpage init()
+        U -> A : Invoke init()
+        alt#ALTBACKGROUND #POSITIVERESPONSE try
+            activate A
+            A -> A : Update **syncing** value as true
+            A -> B : Invoke getCycleDBConnection() for sqlite connection
+            activate B
+            B --> A : return db
+            deactivate B
+            alt #POSITIVERESPONSE db is defined
+                A -> A : Update **message** value as "Loading..."
+                A -> A : Update **data** value as []
+                alt #POSITIVERESPONSE currentStatus is equals to "Pending"
+                    A -> A : getPending(db)
+                else #POSITIVERESPONSE
+                    A -> A : getCounted(db)
+                end
+            end
+            A -> A : Update **syncing** value as false
+        else #NEGATIVEERESPONSE catch error
+            A -> C : invoke exceptionLogger() with error obatined
+            activate C
+            C --> A : retun
+            deactivate C
+            A --> U : return
+            deactivate A
+            deactivate U
+        end
+
+    == PSEUDO CODE ==
+        
+    hnote across
+        **TRY** 
+        UPDATE **syncing** with true
+        INVOKE **getCycleDBConnection()** and ASSIGN the response to db
+        IF db is not undefined
+            UPDATE **message** with "Loading..." string
+            UPDATE **data** with empty array
+            IF currentStatus === "Pending"
+                INVOKE **getPending** with db
+            ELSE
+                INVOKE **getCounted** with db
+        UPDATE **syncing** with false
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+newpage getCounted(db)
+
+    title getCounted(db)
+
+    A -> A : Call getCounted
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        activate A
+        A -> B: Call getCountedItems
+        activate B
+        B --> A: Return Result
+        deactivate B
+        alt #POSITIVERESPONSE if result is null or empty
+            A -> A: update data with empty array
+        else #POSITIVERESPONSE
+            A -> A: update data with result
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> C : invoke exceptionLogger() with error obatined
+        activate C
+        C --> A : retun
+        deactivate C
+    end
+    deactivate A
+
+    == PSEUDO CODE ==
+        
+    hnote across
+        **TRY** 
+        INVOKE **getCountedItems()** with db param and ASSIGN to result
+        IF result is empty or null
+            UPDATE **data** with empty array
+        ELSE 
+            UPDATE **data** with result
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+newpage getPending(db)
+
+
+    title getPending(db)
+
+    A -> A : Call getCounted
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        activate A
+        A -> B: Call getPendingItems(db)
+        activate B
+        B --> A: Return Result
+        deactivate B
+        alt #POSITIVERESPONSE if result is null or empty
+            A -> A: update data with empty array
+        else #POSITIVERESPONSE
+            A -> A: update data with result
+        end
+    else #NEGATIVEERESPONSE catch error
+        A -> C : invoke exceptionLogger() with error obatined
+        activate C
+        C --> A : retun
+        deactivate C
+    end
+    deactivate A
+
+    == PSEUDO CODE ==
+        
+    hnote across
+        **TRY** 
+        INVOKE **getPendingItems()** with db param and ASSIGN to result
+        IF result is empty or null
+            UPDATE **data** with empty array
+        ELSE 
+            UPDATE **data** with result
+
+        **CATCH**
+            INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+
+newpage onChangeStatus(userChoice)
+    title onChangeStatus(userChoice)
+
+    U -> A: Invoke **onChangeStatus** with userChoice 
+    activate U
+    activate A
+    A -> A: Update **currentStatus** with userChoice 
+    A --> U: return 
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        UPDATE **currentStatus** with userChoice
+
+    end note
+
+newpage cancelToast()
+title cancelToast()
+
+    U -> A: Invoke **cancelToast** 
+    activate U
+    activate A
+    A -> A: Hide the Toast message
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Hides the toast message
+
+    end note
+
+newpage onClickScan()
+    title onClickScan()
+
+    U -> A: Invoke **onClickScan** 
+    activate U
+    activate A
+    A -> A: navigate to **Scanner screen**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Navigate to the scanner screen using props.navigation
+
+    end note
+
+newpage onClickAbout()
+    title onClickAbout()
+
+    U -> A: Invoke **onClickAbout** 
+    activate U
+    activate A
+    A -> A: navigate to **About screen**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Navigate to the **About** screen using **props.navigation**
+
+    end note
+
+newpage closeModal()
+    title closeModal()
+
+    U -> A: Invoke **closeModal** 
+    activate U
+    activate A
+    A -> A: Update the **settingsNeed** value with false
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        UPDATE the **settingsNeed** value as  **false**
+
+    end note
+
+newpage goToSettings()
+    title goToSettings()
+
+    U -> A: Invoke **goToSettings** 
+    activate U
+    activate A
+    A -> A: Update the **settingsNeed** value with false
+    A -> A: navigate to **Settings screen**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        UPDATE the **settingsNeed** value as  **false**
+        Navigate to the **Settings** screen using **props.navigation**
+
+    end note
+
+newpage navigateToDetails(item)
+    title navigateToDetails(item)
+
+    U -> A: Invoke **navigateToDetails(item: ItemDetailsBO)** 
+    activate U
+    activate A
+    A -> A: navigate to **CycleCountDetail screen** with **route params value item** as **item**
+    A --> U: return
+    deactivate A
+    deactivate U
+
+    == PSEUDO CODE ==
+
+    hnote across
+
+        Navigate to the **CycleCountDetail** screen And ASSIGN route params value item as **item**
+
+    end note
+
+newpage downloadItems(user)
+    title downloadItems(user)
+
+    U -> A: Invoke **downloadItems(user: UserBO)** 
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        activate U
+        activate A
+        A -> A : Get "enable-download" value from AsyncStorage and assign to enableDownload
+        alt #POSITIVERESPONSE enableDownload is equals to "true"
+            A -> A : Update **message** value as "Downloading items....."
+            A -> A : Update **syncing** value as true
+            A -> S : Invoke **downloadCycleCountItems() with 200 and userId** and Assign response to **request** variable
+            activate S
+            S --> A : return ServiceResult<ItemDetailsBO[] | null>
+            deactivate S
+            alt #POSITIVERESPONSE request.status is equals to success
+                alt #POSITIVERESPONSE request.data is defined and request.data.length is not 0
+                    A -> B : Invoking **getCycleDBConnection()** for establish db connection
+                    activate B
+                    B --> A : return SQLiteDatabase | undefined
+                    deactivate B
+                    alt #POSITIVERESPONSE db established
+                        A -> S : Invoke **addItems() with db and result.data**
+                        activate S
+                        S --> A : return
+                        deactivate S
+                        alt #POSITIVERESPONSE currentStatus is "Pending"
+                            A -> A : Invoke **getPending()**
+                        else #POSITIVERESPONSE
+                            A -> A : Invoke **getCounted()**
+                        end
+                    end
+                    A -> A: Update the **syncing** value with false
+                else #POSITIVERESPONSE
+                    A -> A: Update the **syncing** value with false
+                    A -> A: Invoke and show the toast with "No data found" message as success toast
+                end
+            else #NEGATIVEERESPONSE
+                A -> A: Update the **syncing** value with false
+                A -> A: Invoke and show the toast with "Failed To download Data" message as failure toast
+            end
+        else #POSITIVERESPONSE
+            A -> A: Update the **syncing** value with false
+            A -> A: Update the **settingsNeed** value with true
+        end
+
+    else #NEGATIVEERESPONSE catch error
+        A -> C : invoke exceptionLogger() with error obatined
+        activate C
+        C --> A : retun
+        deactivate C
+        deactivate A
+        A --> U : return
+        deactivate U
+    end
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+        GET enable-download value from AsyncStorage by CALLING getItems("enable-download") and ASSIGN TO enableDownload
+        IF enableDownload equals "true"
+            UPDATE message value as "Downlading items..."
+            UPDATE syncing value as true
+            INVOKE downloadCycleCountItems() with 200, user.userId and ASSIGN to **request** variable
+            IF request.response is success
+                IF request.data is defined
+                    INVOKE getCycleDBConnection() and establish db connection and ASSIGN to db variable
+                    IF db is defined
+                        INVOKE addItemList() with db and request.data and Add items in SQLiteDatabase
+                        IF currentStatus == "Pending", INVOKE getPending()
+                        ELSE INVOKE getCounted()
+                        UPDATE syncing value with false
+                ELSE UPDATE syncing value with false
+                    SHOW success toast with message as "No Data Found"
+            ELSE UPDATE syncing value with false
+                SHOW failure toast with message as "Failed To download Data"
+        ELSE UPDATE syncing value with false
+            UPDATE settingsNeed value with true
+        
+
+        **CATCH**
+        INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+newpage onClickSync()
+    title onClickSync()
+
+    U -> A: Invoke **onClickSync()** 
+    alt#ALTBACKGROUND #POSITIVERESPONSE try
+        activate U
+        activate A
+        A -> D : Invoke **getDBConnection()** 
+        activate D
+        D --> A : return userdb: SQLiteDatabase | undefined
+        deactivate D
+        alt #POSITIVERESPONSE userdb is defined
+            A -> D : Invoke **currentUserInfo()** with userdb 
+            activate D
+            D --> A : return user: UserBO | null
+            deactivate D
+            alt #POSITIVERESPONSE user is defined
+                A -> B : Invoke **getCycleDBConnection()** 
+                activate B
+                B --> A : return db: SQLiteDatabase | undefined
+                deactivate B
+                alt #POSITIVERESPONSE db is defined
+                    A -> B : Invoke **getCountedItems()** with db
+                    activate B
+                    B --> A : counted: ItemDetailsBO[] | null
+                    deactivate B
+                    alt #POSITIVERESPONSE couned is null and length == 0
+                        A -> A : Get "enable-download" value from AsyncStorage and assign to enableDownload
+                        alt #POSITIVERESPONSE enableDownload is equals to "true"
+                            A -> A: Invoke **downloadItems()**
+                        else #POSITIVERESPONSE
+                            A -> A: update the **settingsNeed** with true
+                        end
+                    else #POSITIVERESPONSE
+                        A -> A : Get "enable-upload" value from AsyncStorage and assign to enableUpload
+                        alt #POSITIVERESPONSE enableUpload is equals to "true"                    
+                            A -> A: Update the **message** value with "Syncing..."
+                            A -> A: Update the **syncing** value with false
+                            A -> S: Invoke **updateCycleCountItems()** with counted and user.userID
+                            activate S
+                            S --> A: return response: ServiceResult<string[] | null>
+                            deactivate S
+                            alt #POSITIVERESPONSE response.data is defined && data.length != 0
+                                A -> B : Invoke **getCycleDBConnection()** 
+                                activate B
+                                D --> A : return db: SQLiteDatabase | undefined
+                                deactivate B
+                                alt #POSITIVERESPONSE db is defined
+                                    A -> B: invoke **removeItem()** with db and response.data
+                                    activate B
+                                    B --> A: return
+                                    deactivate B
+                                    A -> A : invoke **downloadItems()**
+                                else #NEGATIVEERESPONSE
+                                    A -> A: Prompt a failure toast with message "Failed To upload your local DB"
+                                end
+                            else #NEGATIVEERESPONSE
+                                A -> A: Prompt a failure toast with message "Failed To upload Data"
+                            end
+                            A -> A : update **syncing** with false
+                        else #POSITIVERESPONSE
+                            A -> A: update the **settingsNeed** with true
+                        end
+                    end
+                end
+            end
+        end
+        A --> U : return
+
+
+    else #NEGATIVEERESPONSE catch error
+        A -> C : invoke exceptionLogger() with error obatined
+        activate C
+        C --> A : return
+        deactivate C
+        A --> U : return
+        deactivate A
+        deactivate U
+    end
+
+    == PSEUDO CODE ==
+
+    hnote across
+        **TRY**
+        INVOKE **getDBConnection()** AND establish db connection
+        IF userdb is defined
+            INVOKE **currentUserInfo()** with userdb and OBTAIN user 
+            IF user is defined
+                INVOKE **getCycleDBConnection()** and establish db connection
+                IF db is defined
+                    INVOKE **getCountedItems()** with db to get counted items
+                    IF counted is undefined
+                        GET the download option from AsyncStorage.getItem("enable-download")
+                        IF enableDownload is "true"
+                            INVOKE **downloadItems(user)**
+                        ELSE
+                            UPDATE **settingsNeed** with true
+                    ELSE
+                        GET the upload option from AsyncStorage.getItem("enable-upload")
+                        IF enableUpload is "true"
+                            UPDATE **message** with "Syncing..."
+                            UPDATE **Syncing** with true
+                            INVOKE **updateCycleCountItems()** with counted and user.userID to upload the counted items
+                            IF response.data is defined
+                                INVOKE **getCycleDBConnection()** to establish the db connection
+                                IF db is defined
+                                    INVOKE **removeItem()** with db and response.data to remove the updated items
+                                    INVOKE **downloadItems()**
+                                ELSE
+                                    SHOW a failure toast with message "Failed To upload your local DB"
+                        ELSE
+                            UPDATE **settingsNeed** with true
+
+        **CATCH**
+        INVOKE **exceptionLogger** method with catched error
+
+    end note
+
+@enduml
+

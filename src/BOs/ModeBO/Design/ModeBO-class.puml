@@ -1,0 +1,30 @@
+@startuml
+title ModeBO - class diagram
+package BOs{
+    package ModeBO{
+        interface ModeBO{
+            +name: 'Cycle' | 'Inventory' 
+            +title: string 
+            +description: string 
+        }
+    }
+}
+newpage
+package BOs{
+    package ModeBO{
+        interface ModeBO{
+            +name: 'Cycle' | 'Inventory' 
+            +title: string 
+            +description: string 
+        }
+    }
+}
+package Screens{
+    package LoginScreen{
+        class LoginScreenVM{
+            +selections: ModeBO[]
+        }
+    }
+}
+ModeBO <-- LoginScreenVM
+@enduml

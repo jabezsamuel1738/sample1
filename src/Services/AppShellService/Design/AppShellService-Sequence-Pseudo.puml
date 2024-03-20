@@ -1,0 +1,217 @@
+@startuml
+
+title AppShellServices Sequence Diagram
+
+hide footbox
+
+participant User 
+participant AppShellServices
+participant HttpClient
+participant "DependencyInjector" as DependencyInjector
+
+
+User -> AppShellServices: updateItemList(itemList, userId)
+activate AppShellServices
+alt TRY
+AppShellServices -> HttpClient: new HttpClient()
+activate HttpClient
+  AppShellServices -> AppShellServices:Form config with headers 
+  AppShellServices -> AppShellServices: Initialize start to 0
+loop for each item in itemList
+  AppShellServices -> AppShellServices: Calculate end value
+  alt end is greater than itemList length
+    AppShellServices -> AppShellServices: Set end to itemList length
+  else else if end is 0
+    AppShellServices -> AppShellServices: Increment end by 50
+  end
+  AppShellServices -> AppShellServices: Slice itemList from start to end and store in tempArr
+  alt tempArr is not empty
+    AppShellServices -> AppShellServices: Encode tempArr to JSON (encodedsrt)
+    AppShellServices -> AppShellServices: Create SOAP envelope with encodedsrt and userId
+    AppShellServices -> AppShellServices: Form url with BaseURL 
+    AppShellServices -> HttpClient: post(url, soap, config)
+    HttpClient --> AppShellServices: Return ServiceResult response
+      deactivate HttpClient
+    AppShellServices -> AppShellServices: Check response status
+    alt response status is not success
+      AppShellServices -> AppShellServices: Throw an Error
+      deactivate HttpClient
+    end
+  end
+  AppShellServices -> AppShellServices: Set start to end
+end
+
+AppShellServices -> AppShellServices:ServiceResult.Success(true)
+deactivate HttpClient
+
+
+else CATCH
+AppShellServices --> AppShellServices: ServiceResult.Failed
+AppShellServices --> User: Return 
+deactivate AppShellServices
+end
+===PSEUDO CODE===
+hnote across
+**TRY**
+Initialize HTTP client
+Form configuration with headers with 'Content-Type': 'text/xml',Accept: 'text/xml', SOAPAction: 'http://tempuri.org/UploadItemsInventory'
+Initialize start index to 0
+Loop through each item in the item list
+Calculate end index
+If end index is greater than the length of the item list, set end index to the length of the item list
+Else if end index is 0, increment end index by 50
+Slice the item list from start index to end index and store in a temporary array
+If the temporary array is not empty
+Encode the array to JSON
+Create a SOAP envelope with the encoded string and user ID as soap = `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><UploadItemsInventory xmlns="http://tempuri.org/"><item>${encodedStr}
+</item><Userid>${userId}</Userid></UploadItemsInventory></soap:Body></soap:Envelope>`;
+Form the URL with the base URL as BaseURL + 'Invadjustment/Services/InventoryAdjustmentUpload.asmx';
+Post the SOAP envelope to the URL with the configuration
+If the response status is not success, throw an error
+throw new Error('Failed to update item list');
+Set the start index to the end index
+Return ServiceResult.Success(true);
+**CATCH**
+Return a ServiceResult Failed with Service exception and false
+
+end note
+
+newpage getDownloadedCount
+
+
+User -> AppShellServices: getDownloadedCount(last, user)
+activate AppShellServices
+AppShellServices -> DependencyInjector: getInstances()
+activate DependencyInjector
+DependencyInjector --> AppShellServices: BaseURL
+deactivate DependencyInjector
+AppShellServices -> AppShellServices: construct url
+AppShellServices -> HttpClient: new HttpClient()
+activate HttpClient
+AppShellServices -> HttpClient: get(url)
+HttpClient --> AppShellServices: response
+deactivate HttpClient
+AppShellServices -> AppShellServices: check response status
+alt response status is Success
+    AppShellServices -> AppShellServices: get data from response
+    alt data is not null
+        AppShellServices -> AppShellServices: parse data.resultSet to get count
+       alt if(data.resultSet is equal to empty)
+        AppShellServices -> AppShellServices: Assign the count as 0
+       else
+        AppShellServices -> AppShellServices: parse data.resultSet to get count
+       end
+        AppShellServices -> AppShellServices: Success(count[0])
+        AppShellServices --> AppShellServices: ServiceResult.Success
+    else data is null
+        AppShellServices -> AppShellServices:ServiceResult.NotFound('Data is empty')
+        AppShellServices --> AppShellServices: ServiceResult
+    end
+else response status is not Success
+    AppShellServices -> AppShellServices:ServiceResult.Failed('Error occured')
+end 
+AppShellServices --> User: Return
+deactivate AppShellServices
+
+==PSEUDO CODE==
+hnote across
+**TRY**
+      Get BaseURL from DependencyInjector's getInstances method
+      Construct url using BaseURL, user's BusinessUnitId, user's UserID, and last
+      Create a new instance of HttpClient for ApiResponseBO and any type
+      Return the response from HttpClient's get method with url
+      If response's status is equal to HttpStatus.Success
+        Get data from response
+        If data is not null
+          Parse data's resultSet to get count
+          If resultSet is empty, parse '0'
+          else parse resultSet
+          Return a Success ServiceResult with parsed count
+        Else
+          Return a NotFound ServiceResult with message 'Data is empty'
+        End If
+      Else
+        Return a Failed ServiceResult with message 'Error occurred' and null data
+      End 
+      **CATCH**
+      Return a Failed ServiceResult with message 'Exception occurred' and null data
+end note
+
+!define POSITIVERESPONSE 90EE90
+!define NEGATIVEERESPONSE EFBBBB
+!define NETURALRESPONSE F2DC79
+!define ALTBACKGROUND 6883BC
+
+hide footbox
+
+skinparam sequence{
+    ParticipantBackgroundColor #A7BEAE
+    LifeLineBackgroundColor #E7E8D1
+    LifeLineBorderColor #2C5F2D
+    ActorBackgroundColor #FC766AFFd
+    ActorBorderColor #FC766AFF
+    ArrowColor #B85042
+    ArrowFontColor #234E70
+}
+
+
+
+newpage fetchItems()
+autonumber
+User -> AppShellServices: Invoke **fetchItems()**
+activate User
+activate AppShellServices
+alt#ALTBACKGROUND TRY
+AppShellServices -> DependencyInjector: Invoke **getInstances()** and store in **BaseURL** variable
+activate DependencyInjector
+DependencyInjector --> AppShellServices: Return
+deactivate DependencyInjector
+AppShellServices -> AppShellServices: Construct **url** using **BaseURL** and other parameters
+AppShellServices -> HttpClient: Create new instance of **HttpClient**
+activate HttpClient
+HttpClient --> AppShellServices: Return
+deactivate HttpClient
+AppShellServices -> HttpClient: Invoke **get(url)** and store in **response** variable
+activate HttpClient
+HttpClient --> AppShellServices: Return
+deactivate HttpClient
+AppShellServices -> AppShellServices: Extract **data** from **response**
+alt#ALTBACKGROUND #POSITIVERESPONSE if(data is not null)
+    AppShellServices -> AppShellServices: Parse **data.resultSet** into **items**
+    AppShellServices -> AppShellServices:**ServiceResult.Success(items)**
+    AppShellServices --> User: Return
+else #NEGATIVEERESPONSE else
+    AppShellServices -> AppShellServices: **ServiceResult.NotFound('Data is empty')**
+    AppShellServices --> User: Return
+end
+else #NEGATIVEERESPONSE CATCH
+AppShellServices -> AppShellServices: **ServiceResult.Failed('Service Exception', null)**
+    AppShellServices --> User: Return
+deactivate User
+deactivate AppShellServices
+end
+
+==PSEUDO CODE==
+
+hnote across
+**TRY**
+Get BaseURL from DependencyInjector
+Construct the URL as BaseURL + 'CatalogItems/CatalogItem.svc/FetchItems/?buisnessunit=' + userinfo.BusinessUnitId 
++ '&FetchCount=' + currentCount + '&LastCount=' + nextCount + '&LastItemID=' + lastItemId + '&LastBarcodeID=' 
++ lastBarCodeId + '&UserID=' + userinfo.UserID + '&datetime=' + lastSyncDate
+Create a new HttpClient instance
+Make a GET request to the constructed URL and store in response
+Extract data from the response
+IF data is not null
+    IF data is not null THEN
+        Parse data.resultSet into items
+        Return ServiceResult success result with items
+    ELSE
+    Return ServiceResult not found result with message 'Data is empty'
+END
+**CATCH**
+Return ServiceResult failed result with message 'Service Exception' and null data
+
+end note
+@enduml 
